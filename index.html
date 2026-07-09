@@ -1,0 +1,1076 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>纯音乐离线合成器</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: #0f1117; color: #e1e4ea;
+    display: flex; justify-content: center; min-height: 100vh; padding: 32px 16px;
+  }
+  .container { max-width: 820px; width: 100%; }
+
+  h1 {
+    font-size: 26px; font-weight: 700; text-align: center;
+    margin-bottom: 4px; letter-spacing: 1px;
+    background: linear-gradient(135deg, #a78bfa, #60a5fa);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .subtitle { text-align: center; font-size: 13px; color: #6b7280; margin-bottom: 28px; }
+
+  /* ---------- Status ---------- */
+  .status-card {
+    background: #1a1d27; border: 1px solid #2a2e3a; border-radius: 12px;
+    padding: 18px 22px; margin-bottom: 20px;
+    display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px;
+  }
+  .status-card .label { font-size: 13px; color: #9ca3af; }
+  .status-card .value  { font-size: 15px; font-weight: 600; }
+  .status-card .value.ok    { color: #34d399; }
+  .status-card .value.busy  { color: #fbbf24; }
+  .status-card .value.err   { color: #f87171; }
+  .progress-bar-wrap {
+    flex: 1; min-width: 120px; height: 6px; background: #2a2e3a; border-radius: 4px; overflow: hidden;
+  }
+  .progress-bar-fill {
+    height: 100%; width: 0%; background: linear-gradient(90deg, #a78bfa, #60a5fa);
+    border-radius: 4px; transition: width .3s ease;
+  }
+  .status-detail { font-size: 13px; color: #6b7280; width: 100%; }
+
+  /* ---------- Editor ---------- */
+  .editor-card {
+    background: #1a1d27; border: 1px solid #2a2e3a; border-radius: 12px;
+    padding: 20px 22px; margin-bottom: 20px;
+  }
+  .editor-card label { display: block; font-size: 14px; font-weight: 600; margin-bottom: 8px; }
+  .editor-card .hint {
+    font-size: 12px; color: #6b7280; margin-bottom: 10px; line-height: 1.6;
+  }
+  .editor-card .hint code {
+    background: #252a39; padding: 1px 6px; border-radius: 4px; font-size: 12px;
+  }
+  textarea {
+    width: 100%; min-height: 220px; padding: 14px 16px;
+    background: #0f1117; color: #e1e4ea; border: 1px solid #2a2e3a; border-radius: 8px;
+    font-family: "Cascadia Code", "Fira Code", "JetBrains Mono", "Consolas", monospace;
+    font-size: 14px; line-height: 1.7; resize: vertical; tab-size: 2;
+  }
+  textarea:focus { outline: none; border-color: #7c3aed; box-shadow: 0 0 0 3px rgba(124,58,237,.2); }
+  textarea.err { border-color: #f87171; box-shadow: 0 0 0 3px rgba(248,113,113,.15); }
+  textarea.ok  { border-color: #34d399; box-shadow: 0 0 0 3px rgba(52,211,153,.15); }
+
+  /* ---------- Validation ---------- */
+  .validate-bar {
+    display: flex; align-items: center; gap: 8px; margin-top: 8px;
+    font-size: 13px; min-height: 22px;
+  }
+  .validate-icon { font-size: 16px; width: 18px; text-align: center; }
+  .validate-icon.ok  { color: #34d399; }
+  .validate-icon.err { color: #f87171; }
+  .validate-icon.wait { color: #6b7280; }
+  .validate-msg { color: #9ca3af; }
+  .validate-msg.ok  { color: #34d399; }
+  .validate-msg.err { color: #f87171; }
+
+  /* ---------- Buttons ---------- */
+  .actions { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 20px; }
+  .btn {
+    padding: 12px 32px; border: none; border-radius: 8px;
+    font-size: 15px; font-weight: 600; cursor: pointer; transition: .2s;
+    display: inline-flex; align-items: center; gap: 8px;
+  }
+  .btn:disabled { opacity: .45; cursor: not-allowed; }
+  .btn-primary {
+    background: linear-gradient(135deg, #7c3aed, #4f46e5); color: #fff;
+    box-shadow: 0 4px 14px rgba(124,58,237,.3);
+  }
+  .btn-primary:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(124,58,237,.4); }
+  .btn-success {
+    background: linear-gradient(135deg, #059669, #10b981); color: #fff;
+    box-shadow: 0 4px 14px rgba(16,185,129,.3);
+  }
+  .btn-success:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(16,185,129,.4); }
+  .btn-success.playing {
+    background: linear-gradient(135deg, #dc2626, #ef4444);
+    box-shadow: 0 4px 14px rgba(239,68,68,.3);
+  }
+  .btn-success.playing:hover:not(:disabled) { box-shadow: 0 6px 20px rgba(239,68,68,.4); }
+  .btn-secondary {
+    background: #2a2e3a; color: #d1d5db;
+  }
+  .btn-secondary:hover:not(:disabled) { background: #353b4a; }
+
+  /* ---------- Error ---------- */
+  .error-box {
+    display: none; padding: 14px 18px; border-radius: 8px;
+    background: rgba(248,113,113,.12); border: 1px solid #f87171; color: #fca5a5;
+    font-size: 14px; margin-bottom: 20px; line-height: 1.6;
+  }
+  .error-box.show { display: block; }
+
+  /* ---------- Footer ---------- */
+  .footer { text-align: center; font-size: 12px; color: #4b5563; margin-top: 32px; }
+
+  /* ---------- Playback Bar ---------- */
+  .playback-bar {
+    display: flex; align-items: center; gap: 12px;
+    width: 100%; margin-bottom: 16px; padding: 8px 0;
+  }
+  .playback-time {
+    font-size: 13px; font-variant-numeric: tabular-nums;
+    color: #9ca3af; min-width: 38px; text-align: center;
+    font-family: "Cascadia Code", "Fira Code", monospace;
+  }
+  .playback-track {
+    flex: 1; height: 5px; background: #2a2e3a; border-radius: 3px; overflow: hidden; cursor: pointer;
+  }
+  .playback-fill {
+    height: 100%; width: 0%; background: linear-gradient(90deg, #10b981, #34d399);
+    border-radius: 3px; transition: width .1s linear;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <h1>♫ 纯音乐离线合成器</h1>
+  <p class="subtitle">Web Audio API · 多轨合成 · WAV 导出</p>
+
+  <!-- 状态区 -->
+  <div class="status-card" id="statusCard">
+    <span class="label">音源加载</span>
+    <span class="value busy" id="statusText">初始化…</span>
+    <div class="progress-bar-wrap">
+      <div class="progress-bar-fill" id="progressFill"></div>
+    </div>
+    <span class="value" id="progressCount" style="font-size:14px;">0/28</span>
+    <div class="status-detail" id="statusDetail">等待加载音源…</div>
+  </div>
+
+  <!-- 乐谱编辑区 -->
+  <div class="editor-card">
+    <label for="scoreInput">乐谱输入</label>
+    <div class="hint">
+      JSON 数组，每条是 <code>[时间, 音高, 乐器, 音量?]</code>，一行一条：<br>
+      <code>inst</code> 缩写：<code>p</code>(钢琴) <code>v</code>(小提琴) <code>e</code>(二胡) <code>x</code>(箫) &nbsp;·&nbsp; 也支持全名<br>
+      音量可选，默认 0.8。示例：<code>[0, 1, "p"]</code>
+    </div>
+    <textarea id="scoreInput" spellcheck="false"></textarea>
+    <div class="validate-bar">
+      <span class="validate-icon" id="validateIcon">◌</span>
+      <span class="validate-msg" id="validateMsg">输入乐谱后自动校验</span>
+    </div>
+  </div>
+
+  <!-- 操作按钮 -->
+  <div class="actions">
+    <button class="btn btn-success" id="btnPreview" disabled>▶ 预览</button>
+    <button class="btn btn-primary" id="btnSynthesize" disabled>🎵 合成并下载</button>
+    <button class="btn btn-secondary" id="btnReset">↻ 重置示例乐谱</button>
+  </div>
+  <div class="playback-bar" id="playbackBar" style="display:none">
+    <div class="playback-time" id="playbackTime">0.0</div>
+    <div class="playback-track"><div class="playback-fill" id="playbackFill"></div></div>
+    <div class="playback-time" id="playbackTotal">0.0</div>
+  </div>
+
+  <!-- 错误提示 -->
+  <div class="error-box" id="errorBox"></div>
+
+  <div class="footer">
+    纯音乐离线合成器 · 内置离线音源生成
+  </div>
+</div>
+
+<script>
+// ============================================================
+//  ★  配置  ★
+// ============================================================
+const INSTRUMENTS = ['piano', 'violin', 'erhu', 'xiao'];
+const NOTE_COUNT = 7;
+const TOTAL_SAMPLES = INSTRUMENTS.length * NOTE_COUNT; // 28
+
+// 自然大调音阶相对主音（Do）的半音偏移量  [Do,Re,Mi,Fa,Sol,La,Si]
+const SCALE_SEMITONES = [0, 2, 4, 5, 7, 9, 11];
+
+// 默认音符持续时间（秒）
+const NOTE_DURATION = 2.0;
+
+// ============================================================
+//  全局状态
+// ============================================================
+let audioCtx = null;           // AudioContext（延迟初始化）
+let sampleMap = {};            // { "piano_1": AudioBuffer, ... }
+let isLoaded = false;
+let loadAborted = false;
+let playbackSource = null;     // 当前预览播放源（用于停止）
+let playbackStartTime = 0;     // 预览开始时间戳
+let playbackTimer = null;      // 进度更新定时器
+let previewBuffer = null;      // 缓存的预览 AudioBuffer
+
+// DOM 引用
+const statusText = document.getElementById('statusText');
+const progressFill = document.getElementById('progressFill');
+const progressCount = document.getElementById('progressCount');
+const statusDetail = document.getElementById('statusDetail');
+const scoreInput = document.getElementById('scoreInput');
+const btnSynthesize = document.getElementById('btnSynthesize');
+const btnPreview = document.getElementById('btnPreview');
+const btnReset = document.getElementById('btnReset');
+const errorBox = document.getElementById('errorBox');
+const playbackBar = document.getElementById('playbackBar');
+const playbackTime = document.getElementById('playbackTime');
+const playbackFill = document.getElementById('playbackFill');
+const playbackTotal = document.getElementById('playbackTotal');
+
+// ============================================================
+//  音源加载流程
+// ============================================================
+function setProgress(loaded, total, text, detail) {
+  const pct = total > 0 ? Math.round((loaded / total) * 100) : 0;
+  progressFill.style.width = pct + '%';
+  progressCount.textContent = `${loaded}/${total}`;
+  statusText.textContent = text;
+  statusText.className = 'value';
+  if (text === '已完成') statusText.classList.add('ok');
+  else if (text.includes('失败')) statusText.classList.add('err');
+  else statusText.classList.add('busy');
+  if (detail !== undefined) statusDetail.textContent = detail;
+}
+
+// ============================================================
+//  音源生成器（离线合成，无需网络下载）
+// ============================================================
+const BASE_FREQ = 261.63;        // C4 基准频率
+const SAMPLE_DURATION = 2.5;     // 每个音源时长（秒）
+
+/** 生成一个乐器的单个音符 AudioBuffer */
+async function generateSample(instrument, pitchNum) {
+  const semitoneOffset = SCALE_SEMITONES[pitchNum - 1];
+  const freq = BASE_FREQ * Math.pow(2, semitoneOffset / 12);
+
+  const sampleRate = 44100;
+  const offlineCtx = new OfflineAudioContext(2, Math.ceil(sampleRate * SAMPLE_DURATION), sampleRate);
+
+  switch (instrument) {
+    case 'piano':  synthPiano(offlineCtx, freq);  break;
+    case 'violin': synthViolin(offlineCtx, freq); break;
+    case 'erhu':   synthErhu(offlineCtx, freq);   break;
+    case 'xiao':   synthXiao(offlineCtx, freq);   break;
+  }
+
+  return offlineCtx.startRendering();
+}
+
+// ---- 钢琴：加法合成，多个泛音以不同速率衰减 ----
+function synthPiano(ctx, freq) {
+  const dur = SAMPLE_DURATION;
+  const master = ctx.createGain();
+  master.gain.setValueAtTime(0, 0);
+  master.gain.linearRampToValueAtTime(1, 0.003);
+  master.gain.exponentialRampToValueAtTime(0.3, 0.1);
+  master.gain.exponentialRampToValueAtTime(0.08, 0.5);
+  master.gain.exponentialRampToValueAtTime(0.001, dur * 0.85);
+  master.connect(ctx.destination);
+
+  const partials = [
+    { harm: 1, amp: 1.0 }, { harm: 2, amp: 0.6 },
+    { harm: 3, amp: 0.35 }, { harm: 4, amp: 0.2 },
+    { harm: 5, amp: 0.12 }, { harm: 6, amp: 0.07 },
+    { harm: 7, amp: 0.04 }, { harm: 8, amp: 0.02 },
+  ];
+
+  for (const p of partials) {
+    const osc = ctx.createOscillator();
+    osc.type = 'sine';
+    osc.frequency.value = freq * p.harm;
+
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(p.amp, 0);
+    g.gain.exponentialRampToValueAtTime(0.001, dur * Math.max(0.15, 1.0 - p.harm * 0.1));
+
+    osc.connect(g);
+    g.connect(master);
+    osc.start(0);
+    osc.stop(dur);
+  }
+}
+
+// ---- 小提琴：锯齿波 + 低通滤波 + 颤音 ----
+function synthViolin(ctx, freq) {
+  const dur = SAMPLE_DURATION;
+  const master = ctx.createGain();
+  master.gain.setValueAtTime(0, 0);
+  master.gain.linearRampToValueAtTime(0.7, 0.05);
+  master.gain.linearRampToValueAtTime(1.0, 0.2);
+  master.gain.setValueAtTime(0.8, dur - 0.3);
+  master.gain.linearRampToValueAtTime(0, dur);
+  master.connect(ctx.destination);
+
+  const osc = ctx.createOscillator();
+  osc.type = 'sawtooth';
+  osc.frequency.setValueAtTime(freq, 0);
+
+  const filter = ctx.createBiquadFilter();
+  filter.type = 'lowpass';
+  filter.frequency.value = 1200;
+  filter.Q.value = 2;
+
+  // 颤音 LFO
+  const lfo = ctx.createOscillator();
+  lfo.frequency.value = 5.5;
+  const lfoGain = ctx.createGain();
+  lfoGain.gain.value = 4;
+  lfo.connect(lfoGain);
+  lfoGain.connect(osc.frequency);
+
+  osc.connect(filter);
+  filter.connect(master);
+  osc.start(0); osc.stop(dur);
+  lfo.start(0); lfo.stop(dur);
+}
+
+// ---- 二胡：双锯齿波失谐 + 带通滤波 + 颤音 ----
+function synthErhu(ctx, freq) {
+  const dur = SAMPLE_DURATION;
+  const master = ctx.createGain();
+  master.gain.setValueAtTime(0, 0);
+  master.gain.linearRampToValueAtTime(0.6, 0.03);
+  master.gain.linearRampToValueAtTime(1.0, 0.15);
+  master.gain.setValueAtTime(0.85, dur - 0.4);
+  master.gain.linearRampToValueAtTime(0, dur);
+  master.connect(ctx.destination);
+
+  // 双锯齿波微失谐，营造二胡特有的鼻音感
+  const osc1 = ctx.createOscillator();
+  osc1.type = 'sawtooth';
+  osc1.frequency.setValueAtTime(freq, 0);
+
+  const osc2 = ctx.createOscillator();
+  osc2.type = 'sawtooth';
+  osc2.frequency.setValueAtTime(freq * 1.005, 0);
+
+  const filter = ctx.createBiquadFilter();
+  filter.type = 'bandpass';
+  filter.frequency.value = 800;
+  filter.Q.value = 3;
+
+  const lfo = ctx.createOscillator();
+  lfo.frequency.value = 5;
+  const lfoGain = ctx.createGain();
+  lfoGain.gain.value = 5;
+  lfo.connect(lfoGain);
+  lfoGain.connect(osc1.frequency);
+  lfoGain.connect(osc2.frequency);
+
+  const mix = ctx.createGain();
+  mix.gain.value = 0.5;
+
+  osc1.connect(mix); osc2.connect(mix);
+  mix.connect(filter);
+  filter.connect(master);
+
+  osc1.start(0); osc1.stop(dur);
+  osc2.start(0); osc2.stop(dur);
+  lfo.start(0); lfo.stop(dur);
+}
+
+// ---- 箫：正弦波 + 微弱气声 + 带通 ----
+function synthXiao(ctx, freq) {
+  const dur = SAMPLE_DURATION;
+  const master = ctx.createGain();
+  master.gain.setValueAtTime(0, 0);
+  master.gain.linearRampToValueAtTime(0.8, 0.1);
+  master.gain.setValueAtTime(0.7, dur - 0.5);
+  master.gain.linearRampToValueAtTime(0, dur);
+  master.connect(ctx.destination);
+
+  // 主音：正弦波
+  const osc = ctx.createOscillator();
+  osc.type = 'sine';
+  osc.frequency.setValueAtTime(freq, 0);
+
+  // 微颤音
+  const lfo = ctx.createOscillator();
+  lfo.frequency.value = 3;
+  const lfoGain = ctx.createGain();
+  lfoGain.gain.value = 3;
+  lfo.connect(lfoGain);
+  lfoGain.connect(osc.frequency);
+
+  const filter = ctx.createBiquadFilter();
+  filter.type = 'lowpass';
+  filter.frequency.value = 2000;
+  filter.Q.value = 1;
+
+  // 微弱气声（白噪声经过带通滤波）
+  const noiseLen = ctx.sampleRate * 0.5;
+  const noiseBuf = ctx.createBuffer(1, noiseLen, ctx.sampleRate);
+  const nd = noiseBuf.getChannelData(0);
+  for (let i = 0; i < noiseLen; i++) nd[i] = Math.random() * 2 - 1;
+  const noise = ctx.createBufferSource();
+  noise.buffer = noiseBuf;
+  noise.loop = true;
+
+  const noiseFilter = ctx.createBiquadFilter();
+  noiseFilter.type = 'bandpass';
+  noiseFilter.frequency.value = freq * 2;
+  noiseFilter.Q.value = 3;
+
+  const noiseGain = ctx.createGain();
+  noiseGain.gain.setValueAtTime(0, 0);
+  noiseGain.gain.linearRampToValueAtTime(0.04, 0.3);
+  noiseGain.gain.setValueAtTime(0.02, dur - 0.3);
+  noiseGain.gain.linearRampToValueAtTime(0, dur);
+
+  osc.connect(filter);
+  filter.connect(master);
+  noise.connect(noiseFilter);
+  noiseFilter.connect(noiseGain);
+  noiseGain.connect(master);
+
+  osc.start(0); osc.stop(dur);
+  noise.start(0); noise.stop(dur);
+  lfo.start(0); lfo.stop(dur);
+}
+
+async function loadAllSamples() {
+  if (isLoaded) return;
+  loadAborted = false;
+
+  // 延迟初始化 AudioContext
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+
+  setProgress(0, TOTAL_SAMPLES, '生成音源…', '正在合成乐器样本…');
+
+  const allKeys = [];
+  for (const inst of INSTRUMENTS) {
+    for (let n = 1; n <= NOTE_COUNT; n++) {
+      allKeys.push(`${inst}_${n}`);
+    }
+  }
+
+  const failed = [];
+
+  for (let i = 0; i < allKeys.length; i++) {
+    if (loadAborted) {
+      setProgress(i, TOTAL_SAMPLES, '已中止', '用户中止加载');
+      return;
+    }
+
+    const key = allKeys[i];
+    const [inst, numStr] = key.split('_');
+    const num = parseInt(numStr, 10);
+
+    setProgress(i, TOTAL_SAMPLES, '生成中…', `离线合成 ${key} …`);
+
+    try {
+      const buffer = await generateSample(inst, num);
+      sampleMap[key] = buffer;
+    } catch (err) {
+      failed.push(key);
+      console.warn(`[SampleGen] 生成失败: ${key} — ${err.message}`);
+    }
+  }
+
+  const totalOk = Object.keys(sampleMap).length;
+  if (failed.length > 0) {
+    setProgress(totalOk, TOTAL_SAMPLES,
+      totalOk > 0 ? '部分加载完成' : '加载失败',
+      `已完成 ${totalOk}/${TOTAL_SAMPLES} · 失败 ${failed.length} 个: ${failed.join(', ')}`
+    );
+  } else {
+    setProgress(TOTAL_SAMPLES, TOTAL_SAMPLES, '已完成',
+      `全部 ${TOTAL_SAMPLES} 个音源离线合成完毕`
+    );
+  }
+
+  if (totalOk > 0) {
+    isLoaded = true;
+    btnSynthesize.disabled = false;
+    btnPreview.disabled = false;
+  }
+}
+
+// ============================================================
+//  乐谱解析（JSON 格式）
+// ============================================================
+
+/** 乐器缩写映射 */
+const INSTRUMENT_ALIAS = {
+  p: 'piano', piano: 'piano',
+  v: 'violin', violin: 'violin',
+  e: 'erhu', erhu: 'erhu',
+  x: 'xiao', xiao: 'xiao',
+};
+
+/** 解析 JSON 乐谱：支持两种写法 */
+function parseScore(text) {
+  // 去除 # 注释行（整行或行首空白后紧跟 #）
+  const cleaned = text
+    .replace(/\r\n?/g, '\n')
+    .split('\n')
+    .map(l => l.trim())
+    .filter(l => l.length > 0 && !l.startsWith('#'))
+    .join('\n');
+
+  const trimmed = cleaned.trim();
+  if (!trimmed) throw new Error('乐谱为空，请先输入乐谱内容。');
+
+  // 去掉尾逗号（# 注释行被删后可能残留 , 在 ] 或 } 前）
+  const fixed = trimmed.replace(/,(\s*[}\]])/g, '$1');
+
+  let parsed;
+  try {
+    parsed = JSON.parse(fixed);
+  } catch (e) {
+    throw new Error(`JSON 解析失败：${e.message}\n请检查 JSON 格式是否正确（如漏了逗号、引号等）。`);
+  }
+
+  if (!Array.isArray(parsed) || parsed.length === 0) {
+    throw new Error('乐谱应为非空 JSON 数组，如 [{"time":0, "pitch":1, "inst":"p"}, ...]');
+  }
+
+  // 检测第一个元素类型：对象 → 新格式；数组 → 旧格式
+  if (typeof parsed[0] === 'object' && !Array.isArray(parsed[0])) {
+    return parseScoreObjects(parsed);
+  }
+  return parseScoreArrays(parsed);
+}
+
+/** 新格式：[{time, pitch, inst, vol?}, ...] */
+function parseScoreObjects(arr) {
+  const validInstruments = new Set(INSTRUMENTS);
+  const notes = [];
+
+  for (let i = 0; i < arr.length; i++) {
+    const item = arr[i];
+    if (typeof item !== 'object' || item === null) {
+      throw new Error(`第 ${i+1} 个音符无效，应为对象 {time, pitch, inst}。`);
+    }
+
+    // time
+    const time = item.time ?? item.t;
+    if (typeof time !== 'number' || time < 0) {
+      throw new Error(`第 ${i+1} 个音符的 time 无效（得到 ${JSON.stringify(item.time)}），应为非负数字。`);
+    }
+
+    // pitch
+    const pitch = item.pitch ?? item.p;
+    if (!Number.isInteger(pitch) || pitch < 1 || pitch > 7) {
+      throw new Error(`第 ${i+1} 个音符的 pitch 无效（得到 ${JSON.stringify(item.pitch)}），应为 1-7 的整数。`);
+    }
+
+    // inst
+    const rawInst = (item.inst ?? item.i ?? '').toLowerCase();
+    const inst = INSTRUMENT_ALIAS[rawInst];
+    if (!inst) {
+      throw new Error(`第 ${i+1} 个音符的 inst 无效（"${rawInst}"），可用：p/v/e/x 或 piano/violin/erhu/xiao。`);
+    }
+
+    // vol（可选，默认 0.8）
+    let vol = 0.8;
+    if (item.vol !== undefined || item.v !== undefined) {
+      vol = item.vol ?? item.v;
+      if (typeof vol !== 'number' || vol < 0 || vol > 1) {
+        throw new Error(`第 ${i+1} 个音符的 vol 无效（得到 ${JSON.stringify(vol)}），应为 0-1 的数字。`);
+      }
+    }
+
+    notes.push([time, pitch, inst, vol]);
+  }
+
+  return notes;
+}
+
+/** 旧格式兼容：[[time, pitch, inst, vol?], ...] */
+function parseScoreArrays(arr) {
+  const validInstruments = new Set(INSTRUMENTS);
+  const notes = [];
+
+  for (let i = 0; i < arr.length; i++) {
+    const item = arr[i];
+    if (!Array.isArray(item) || item.length < 3 || item.length > 4) {
+      throw new Error(`第 ${i+1} 个音符格式错误：需要 [time, pitch, inst, vol?]，当前 ${item.length} 项。`);
+    }
+
+    const [time, pitch, rawInst, rawVol] = item;
+    if (typeof time !== 'number' || time < 0) {
+      throw new Error(`第 ${i+1} 个音符的 time 无效（得到 ${JSON.stringify(time)}），应为非负数字。`);
+    }
+    if (!Number.isInteger(pitch) || pitch < 1 || pitch > 7) {
+      throw new Error(`第 ${i+1} 个音符的 pitch 无效（得到 ${JSON.stringify(pitch)}），应为 1-7 的整数。`);
+    }
+    const inst = INSTRUMENT_ALIAS[String(rawInst).toLowerCase()];
+    if (!inst) {
+      throw new Error(`第 ${i+1} 个音符的 inst 无效（"${rawInst}"），可用：p/v/e/x 或 piano/violin/erhu/xiao。`);
+    }
+
+    let vol = 0.8;
+    if (rawVol !== undefined) {
+      vol = rawVol;
+      if (typeof vol !== 'number' || vol < 0 || vol > 1) {
+        throw new Error(`第 ${i+1} 个音符的 vol 无效（得到 ${JSON.stringify(vol)}），应为 0-1 的数字。`);
+      }
+    }
+
+    notes.push([time, pitch, inst, vol]);
+  }
+
+  return notes;
+}
+
+// ============================================================
+//  合成引擎
+// ============================================================
+function calculateDuration(score) {
+  let maxEnd = 0;
+  for (const [time] of score) {
+    const end = time + NOTE_DURATION;
+    if (end > maxEnd) maxEnd = end;
+  }
+  return Math.max(maxEnd, 1); // 至少 1 秒
+}
+
+/**
+ * 获取变调 playbackRate
+ * 基准：音高序号 1（Do）对应偏移量 SCALE_SEMITONES[0] = 0
+ * 目标音高序号 P 的偏移量 = SCALE_SEMITONES[P-1]
+ * playbackRate = 2^(偏移量 / 12)
+ */
+function getPlaybackRate(pitch) {
+  const semitoneOffset = SCALE_SEMITONES[pitch - 1];
+  return Math.pow(2, semitoneOffset / 12);
+}
+
+async function renderScore(score, totalDuration) {
+  // 创建 OfflineAudioContext
+  const sampleRate = 44100;
+  const offlineCtx = new OfflineAudioContext(2, Math.ceil(sampleRate * totalDuration), sampleRate);
+
+  // 按时间排序（确保调度顺序，其实非必须但有助于排查）
+  const sorted = [...score].sort((a, b) => a[0] - b[0]);
+
+  for (const [time, pitch, instrument, volume] of sorted) {
+    const key = `${instrument}_${pitch}`;
+    let buffer = sampleMap[key];
+
+    if (!buffer) {
+      // 尝试用同一乐器的第 1 号音变调替代
+      const fallbackKey = `${instrument}_1`;
+      buffer = sampleMap[fallbackKey];
+      if (!buffer) {
+        console.warn(`[Synthesizer] 缺少 ${key}，且无 fallback，跳过。`);
+        continue;
+      }
+    }
+
+    // 计算 playbackRate
+    // 如果用的是精确匹配的 sample，pitch 偏移量直接来自 SCALE_SEMITONES
+    const playbackRate = getPlaybackRate(pitch);
+
+    // 创建源节点
+    const source = offlineCtx.createBufferSource();
+    source.buffer = buffer;
+    source.playbackRate.value = playbackRate;
+
+    // 音量控制
+    const gain = offlineCtx.createGain();
+    gain.gain.value = Math.min(Math.max(volume, 0), 1);
+
+    source.connect(gain);
+    gain.connect(offlineCtx.destination);
+
+    // 计算实际结束时间（加速后样本变短）
+    const actualDuration = buffer.duration / playbackRate;
+    source.start(time);
+    source.stop(time + actualDuration);
+  }
+
+  // 渲染
+  return offlineCtx.startRendering();
+}
+
+// ============================================================
+//  WAV 导出（44.1kHz / 16bit / 立体声）
+// ============================================================
+function audioBufferToWav(buffer) {
+  const numChannels = buffer.numberOfChannels;
+  const sampleRate = buffer.sampleRate;
+  const format = 1; // PCM
+  const bitsPerSample = 16;
+
+  const samples = buffer.length;
+  const byteRate = sampleRate * numChannels * bitsPerSample / 8;
+  const blockAlign = numChannels * bitsPerSample / 8;
+  const dataSize = samples * numChannels * bitsPerSample / 8;
+  const headerSize = 44;
+  const totalSize = headerSize + dataSize;
+
+  const arrayBuffer = new ArrayBuffer(totalSize);
+  const view = new DataView(arrayBuffer);
+
+  // RIFF header
+  writeString(view, 0, 'RIFF');
+  view.setUint32(4, totalSize - 8, true);
+  writeString(view, 8, 'WAVE');
+
+  // fmt chunk
+  writeString(view, 12, 'fmt ');
+  view.setUint32(16, 16, true);           // chunk size
+  view.setUint16(20, format, true);        // PCM = 1
+  view.setUint16(22, numChannels, true);
+  view.setUint32(24, sampleRate, true);
+  view.setUint32(28, byteRate, true);
+  view.setUint16(32, blockAlign, true);
+  view.setUint16(34, bitsPerSample, true);
+
+  // data chunk header
+  writeString(view, 36, 'data');
+  view.setUint32(40, dataSize, true);
+
+  // 写入采样数据（交错 interleaved）
+  const offset = 44;
+  const channelData = [];
+  for (let ch = 0; ch < numChannels; ch++) {
+    channelData.push(buffer.getChannelData(ch));
+  }
+
+  let idx = offset;
+  for (let s = 0; s < samples; s++) {
+    for (let ch = 0; ch < numChannels; ch++) {
+      const sample = Math.max(-1, Math.min(1, channelData[ch][s]));
+      const val = sample < 0 ? sample * 0x8000 : sample * 0x7FFF;
+      view.setInt16(idx, val, true);
+      idx += 2;
+    }
+  }
+
+  return new Blob([arrayBuffer], { type: 'audio/wav' });
+}
+
+function writeString(view, offset, str) {
+  for (let i = 0; i < str.length; i++) {
+    view.setUint8(offset + i, str.charCodeAt(i));
+  }
+}
+
+function downloadBlob(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  // 延迟释放 URL
+  setTimeout(() => URL.revokeObjectURL(url), 10000);
+}
+
+// ============================================================
+//  主流程：合成并下载
+// ============================================================
+async function handleSynthesize() {
+  // 清除旧错误
+  hideError();
+
+  // 1) 检查音源
+  if (!isLoaded || Object.keys(sampleMap).length === 0) {
+    showError('音源尚未加载完成，请等待加载完毕后再试。');
+    return;
+  }
+
+  // 2) 解析乐谱
+  let score;
+  try {
+    score = parseScore(scoreInput.value);
+  } catch (err) {
+    showError(err.message);
+    return;
+  }
+
+  // 3) 合成
+  const totalDuration = calculateDuration(score);
+  const durationStr = totalDuration.toFixed(1);
+
+  btnSynthesize.disabled = true;
+  btnSynthesize.textContent = '⏳ 合成中…';
+
+  try {
+    // 如果 AudioContext 被挂起（浏览器自动暂停策略），恢复
+    if (audioCtx && audioCtx.state === 'suspended') {
+      await audioCtx.resume();
+    }
+
+    setProgress(
+      Object.keys(sampleMap).length,
+      TOTAL_SAMPLES,
+      '合成中…',
+      `总时长约 ${durationStr} 秒 · 共 ${score.length} 个音符`
+    );
+
+    statusDetail.textContent = `离线渲染中（${durationStr} 秒 × ${score.length} 音符）…`;
+
+    const renderedBuffer = await renderScore(score, totalDuration);
+
+    statusDetail.textContent = '转换为 WAV 格式…';
+
+    // 4) 导出 WAV
+    const wavBlob = audioBufferToWav(renderedBuffer);
+
+    // 5) 下载
+    downloadBlob(wavBlob, 'pure_music_export.wav');
+
+    // 恢复 UI
+    setProgress(
+      Object.keys(sampleMap).length,
+      TOTAL_SAMPLES,
+      '已完成',
+      `导出成功！文件: pure_music_export.wav (${(wavBlob.size / 1024 / 1024).toFixed(1)} MB)`
+    );
+  } catch (err) {
+    console.error('[Synthesizer]', err);
+    showError(`合成失败：${err.message}。请检查控制台获取详细错误信息。`);
+    // 恢复进度显示
+    setProgress(
+      Object.keys(sampleMap).length,
+      TOTAL_SAMPLES,
+      isLoaded ? '加载完成' : '部分加载',
+      ''
+    );
+  } finally {
+    btnSynthesize.disabled = false;
+    btnSynthesize.textContent = '🎵 合成并下载';
+  }
+}
+
+// ============================================================
+//  预览播放
+// ============================================================
+
+function stopPreview() {
+  if (playbackTimer) { clearInterval(playbackTimer); playbackTimer = null; }
+  if (playbackSource) {
+    try { playbackSource.stop(); } catch (_) {}
+    playbackSource = null;
+  }
+  previewBuffer = null;
+  btnPreview.className = 'btn btn-success';
+  btnPreview.textContent = '▶ 预览';
+  playbackBar.style.display = 'none';
+}
+
+async function handlePreview() {
+  hideError();
+
+  // 如果正在播放 → 停止
+  if (playbackSource) {
+    stopPreview();
+    return;
+  }
+
+  if (!isLoaded || Object.keys(sampleMap).length === 0) {
+    showError('音源尚未加载完成，请等待加载完毕后再试。');
+    return;
+  }
+
+  let score;
+  try {
+    score = parseScore(scoreInput.value);
+  } catch (err) {
+    showError(err.message);
+    return;
+  }
+
+  const totalDuration = calculateDuration(score);
+  btnPreview.disabled = true;
+  btnPreview.textContent = '⏳ 渲染中…';
+
+  try {
+    if (audioCtx && audioCtx.state === 'suspended') {
+      await audioCtx.resume();
+    }
+
+    statusDetail.textContent = `离线渲染中（${totalDuration.toFixed(1)} 秒 × ${score.length} 音符）…`;
+
+    // 复用离线渲染引擎
+    previewBuffer = await renderScore(score, totalDuration);
+
+    // 播放
+    const source = audioCtx.createBufferSource();
+    source.buffer = previewBuffer;
+    source.connect(audioCtx.destination);
+    source.start(0);
+    playbackSource = source;
+
+    // 播放条
+    playbackTotal.textContent = totalDuration.toFixed(1);
+    playbackTime.textContent = '0.0';
+    playbackFill.style.width = '0%';
+    playbackBar.style.display = 'flex';
+
+    btnPreview.className = 'btn btn-success playing';
+    btnPreview.textContent = '⏹ 停止';
+    btnPreview.disabled = false;
+    statusDetail.textContent = `▶ 播放中  ·  总长 ${totalDuration.toFixed(1)} 秒`;
+
+    // 进度定时器
+    playbackStartTime = audioCtx.currentTime;
+    playbackTimer = setInterval(() => {
+      if (!playbackSource) { stopPreview(); return; }
+      const elapsed = audioCtx.currentTime - playbackStartTime;
+      const pct = Math.min(elapsed / totalDuration * 100, 100);
+      playbackTime.textContent = elapsed.toFixed(1);
+      playbackFill.style.width = pct + '%';
+      if (pct >= 100) stopPreview();
+    }, 100);
+
+    // 播放结束自动停止
+    source.onended = () => stopPreview();
+
+  } catch (err) {
+    console.error('[Preview]', err);
+    showError(`预览失败：${err.message}`);
+    btnPreview.className = 'btn btn-success';
+    btnPreview.textContent = '▶ 预览';
+    btnPreview.disabled = false;
+  }
+}
+
+// ============================================================
+//  UI 辅助
+// ============================================================
+const validateIcon = document.getElementById('validateIcon');
+const validateMsg = document.getElementById('validateMsg');
+
+/** 实时校验乐谱 JSON 语法（忽略 # 注释和尾逗号） */
+function validateScoreInput() {
+  const raw = scoreInput.value.trim();
+  if (!raw) {
+    validateIcon.className = 'validate-icon wait';
+    validateIcon.textContent = '◌';
+    validateMsg.className = 'validate-msg';
+    validateMsg.textContent = '输入乐谱后自动校验';
+    scoreInput.className = '';
+    return;
+  }
+
+  // 预处理：去注释 + 去尾逗号
+  const cleaned = raw
+    .replace(/\r\n?/g, '\n')
+    .split('\n')
+    .map(l => l.trim())
+    .filter(l => l.length > 0 && !l.startsWith('#'))
+    .join('\n');
+  const fixed = cleaned.trim().replace(/,(\s*[}\]])/g, '$1');
+
+  try {
+    const parsed = JSON.parse(fixed);
+    if (!Array.isArray(parsed) || parsed.length === 0) {
+      throw new Error('乐谱应为非空数组');
+    }
+    // 额外校验：检查每个元素的格式
+    for (let i = 0; i < parsed.length; i++) {
+      const item = parsed[i];
+      if (Array.isArray(item)) {
+        if (item.length < 3 || item.length > 4) {
+          throw new Error(`第 ${i+1} 条需要 3~4 项，当前 ${item.length} 项`);
+        }
+        if (typeof item[0] !== 'number' || item[0] < 0) throw new Error(`第 ${i+1} 条时间无效`);
+        if (!Number.isInteger(item[1]) || item[1] < 1 || item[1] > 7) throw new Error(`第 ${i+1} 条音高应为 1-7`);
+      } else if (typeof item === 'object' && item !== null) {
+        const t = item.time ?? item.t;
+        const p = item.pitch ?? item.p;
+        if (typeof t !== 'number' || t < 0) throw new Error(`第 ${i+1} 条 time 无效`);
+        if (!Number.isInteger(p) || p < 1 || p > 7) throw new Error(`第 ${i+1} 条 pitch 应为 1-7`);
+      } else {
+        throw new Error(`第 ${i+1} 条格式错误`);
+      }
+    }
+    validateIcon.className = 'validate-icon ok';
+    validateIcon.textContent = '✓';
+    validateMsg.className = 'validate-msg ok';
+    validateMsg.textContent = `JSON 语法正确，共 ${parsed.length} 个音符`;
+    scoreInput.className = 'ok';
+  } catch (e) {
+    validateIcon.className = 'validate-icon err';
+    validateIcon.textContent = '✗';
+    validateMsg.className = 'validate-msg err';
+    // 取简短的错误信息
+    const msg = e.message
+      .replace(/^JSON\.parse: /, '')
+      .replace(/^JSON\.parse: position \d+$/, 'JSON 格式错误')
+      .replace(/^Unexpected token/, '语法错误');
+    validateMsg.textContent = msg;
+    scoreInput.className = 'err';
+  }
+}
+
+function showError(msg) {
+  errorBox.textContent = msg;
+  errorBox.classList.add('show');
+}
+
+function hideError() {
+  errorBox.textContent = '';
+  errorBox.classList.remove('show');
+}
+
+function resetDefaultScore() {
+  scoreInput.value = '[\n' + [
+    '[0, 1, "p", 0.8]',
+    '[0.5, 3, "p", 0.7]',
+    '[1, 5, "p", 0.6]',
+    '[1.5, 1, "x", 0.8]',
+    '[2.5, 3, "x", 0.7]',
+    '[3.5, 5, "x", 0.6]',
+    '[4.5, 2, "v", 0.7]',
+    '[5, 4, "v", 0.6]',
+    '[5.5, 6, "v", 0.5]',
+    '[6, 1, "e", 0.7]',
+    '[7, 3, "e", 0.6]',
+    '[8, 5, "e", 0.5]',
+    '[9, 7, "p", 0.7]',
+    '[9.5, 6, "p", 0.5]',
+    '[10, 4, "p", 0.6]',
+    '[10.5, 2, "p", 0.5]',
+    '[11, 1, "p", 0.7]',
+  ].join(',\n') + '\n]';
+}
+
+// ============================================================
+//  页面初始化
+// ============================================================
+resetDefaultScore();
+
+// 监听按钮
+btnSynthesize.addEventListener('click', handleSynthesize);
+btnPreview.addEventListener('click', handlePreview);
+btnReset.addEventListener('click', () => { resetDefaultScore(); validateScoreInput(); stopPreview(); });
+
+// 实时校验乐谱
+scoreInput.addEventListener('input', validateScoreInput);
+// 初始校验
+validateScoreInput();
+
+// 自动加载音源
+(async function init() {
+  try {
+    await loadAllSamples();
+  } catch (err) {
+    console.error('[Init]', err);
+    showError(`音源生成失败：${err.message}`);
+  }
+})();
+
+// 暴露工具函数至全局（调试用）
+window.__debug = { audioCtx, sampleMap, isLoaded, parseScore, renderScore, audioBufferToWav };
+</script>
+</body>
+</html>
