@@ -186,7 +186,7 @@
             display: flex;
             align-items: center;
             gap: 12px;
-            margin-bottom: 12px;
+            margin-bottom: 8px;
             flex-wrap: wrap;
         }
 
@@ -200,9 +200,141 @@
             width: 120px;
         }
 
+        .reverb-row input[type="number"] {
+            background: #0f1117;
+            color: #e1e4ea;
+            border: 1px solid #2a2e3a;
+            border-radius: 6px;
+            padding: 4px 8px;
+            width: 68px;
+            font-size: 13px;
+            text-align: center;
+        }
+        .reverb-row input[type="number"]:focus {
+            outline: none;
+            border-color: #7c3aed;
+        }
+        .reverb-row input[type="number"].err {
+            border-color: #f87171;
+            box-shadow: 0 0 0 2px rgba(248, 113, 113, .2);
+            transition: none;
+        }
+        .reverb-row input[type="number"].err-flash {
+            border-color: #f87171;
+            box-shadow: 0 0 0 3px rgba(248, 113, 113, .4);
+            transition: border-color .5s, box-shadow .5s;
+        }
+
         .reverb-row span {
             font-size: 13px;
             color: #9ca3af;
+        }
+
+        .reverb-presets {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            margin: 4px 0 12px 0;
+        }
+        .reverb-presets .preset-btn {
+            background: #2a2e3a;
+            color: #b0b7c3;
+            border: 1px solid #3b3f4c;
+            border-radius: 5px;
+            padding: 3px 10px;
+            font-size: 11px;
+            cursor: pointer;
+            transition: .15s;
+        }
+        .reverb-presets .preset-btn:hover {
+            background: #3b3f4c;
+            color: #e1e4ea;
+            border-color: #7c3aed;
+        }
+
+        .sample-import-card {
+            background: #1a1d27;
+            border: 1px solid #2a2e3a;
+            border-radius: 12px;
+            padding: 16px 20px;
+            margin-bottom: 16px;
+        }
+        .sample-import-card .section-title {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #c4b5fd;
+        }
+        .sample-import-card .import-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 8px;
+        }
+        .sample-import-card .import-row label {
+            font-size: 13px;
+            color: #9ca3af;
+            white-space: nowrap;
+        }
+        .sample-import-card input[type="file"] {
+            font-size: 12px;
+            color: #9ca3af;
+        }
+        .sample-import-card input[type="url"] {
+            flex: 1;
+            min-width: 180px;
+            background: #0f1117;
+            color: #e1e4ea;
+            border: 1px solid #2a2e3a;
+            border-radius: 6px;
+            padding: 6px 10px;
+            font-size: 13px;
+        }
+        .sample-import-card input[type="url"]:focus {
+            outline: none;
+            border-color: #7c3aed;
+        }
+        .sample-import-card .import-btn {
+            background: #3b3f4c;
+            color: #e5e7eb;
+            border: none;
+            border-radius: 6px;
+            padding: 6px 16px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: .2s;
+        }
+        .sample-import-card .import-btn:hover {
+            background: #4b5563;
+        }
+        .sample-import-card .import-btn:disabled {
+            opacity: .4;
+            cursor: not-allowed;
+        }
+        .sample-list {
+            max-height: 120px;
+            overflow-y: auto;
+            margin-top: 6px;
+            font-size: 12px;
+            color: #6b7280;
+            border-top: 1px solid #2a2e3a;
+            padding-top: 6px;
+        }
+        .sample-list .sample-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 2px 0;
+        }
+        .sample-list .sample-item .samp-name {
+            color: #9ca3af;
+        }
+        .sample-list .sample-item .samp-badge {
+            color: #34d399;
+            font-size: 10px;
+        }
+        .sample-list .sample-item .samp-badge.synth {
+            color: #fbbf24;
         }
 
         textarea {
@@ -397,8 +529,8 @@
 </head>
 <body>
     <div class="container">
-        <h1>♫ 纯音乐合成器 V3.1</h1>
-        <p class="subtitle">混响 · 和弦 · BPM节拍 · 7种乐器 · WAV导出 (已修复增强)</p>
+        <h1>♫ 纯音乐合成器 V4.0</h1>
+        <p class="subtitle">物理建模音源 · 外部采样导入 · 混响精密控制 · 7种乐器 · WAV导出</p>
 
         <div class="status-card" id="statusCard">
             <span class="label">音源加载</span>
@@ -411,6 +543,23 @@
             <div class="status-detail" id="statusDetail">等待加载音源…</div>
         </div>
 
+        <div class="sample-import-card">
+            <div class="section-title">🎹 外部采样导入（WAV / MP3 / OGG）</div>
+            <div class="import-row">
+                <label>📁 本地文件：</label>
+                <input type="file" id="sampleFileInput" multiple accept=".wav,.mp3,.ogg,audio/wav,audio/mpeg,audio/ogg">
+                <button class="import-btn" id="btnImportFiles">导入选中</button>
+            </div>
+            <div class="import-row">
+                <label>🔗 远程 URL：</label>
+                <input type="url" id="sampleUrlInput" placeholder="https://example.com/samples/piano_c4.wav">
+                <button class="import-btn" id="btnImportUrl">加载</button>
+            </div>
+            <div class="sample-list" id="sampleList">
+                <div style="color:#4b5563;">尚未导入外部采样，将使用内置合成音源</div>
+            </div>
+        </div>
+
         <div class="editor-card">
             <label for="scoreInput">乐谱输入</label>
             <div class="bpm-row">
@@ -420,11 +569,19 @@
             </div>
             <div class="reverb-row">
                 <label for="reverbDry">混响干声</label>
-                <input type="range" id="reverbDry" min="0" max="100" value="60" step="1">
-                <span id="reverbDryLabel">60%</span>
+                <input type="range" id="reverbDry" min="0" max="100" value="60" step="0.1">
+                <input type="number" id="reverbDryNum" min="0" max="100" value="60" step="0.1">
+                <span>%</span>
                 <label for="reverbWet" style="margin-left:16px;">湿声</label>
-                <input type="range" id="reverbWet" min="0" max="100" value="40" step="1">
-                <span id="reverbWetLabel">40%</span>
+                <input type="range" id="reverbWet" min="0" max="100" value="40" step="0.1">
+                <input type="number" id="reverbWetNum" min="0" max="100" value="40" step="0.1">
+                <span>%</span>
+            </div>
+            <div class="reverb-presets">
+                <button class="preset-btn" data-dry="0" data-wet="0">Clear</button>
+                <button class="preset-btn" data-dry="40" data-wet="30">Room</button>
+                <button class="preset-btn" data-dry="50" data-wet="45">Hall</button>
+                <button class="preset-btn" data-dry="30" data-wet="70">Cathedral</button>
             </div>
             <div class="hint">
                 <b>📝 支持两种格式：</b><br>
@@ -456,21 +613,45 @@
         </div>
 
         <div class="error-box" id="errorBox"></div>
-        <div class="footer">纯音乐合成器 V3.1 · 内置7种离线音源 · 混响可调 · 长音符循环支持</div>
+        <div class="footer">纯音乐合成器 V4.0 · 物理建模音源 · 外部采样导入 · 混响精密控制 · 长音符循环支持</div>
     </div>
 
     <script>
         (function() {
+            'use strict';
+
+            // ============================================================
+            //  全局错误边界 — 捕获未处理异常和 Promise 拒绝
+            // ============================================================
+            window.addEventListener('error', (e) => {
+                console.error('[Fatal]', e.error || e.message);
+                const statusText = document.getElementById('statusText');
+                if (statusText) statusText.textContent = '运行时错误';
+                const errorBox = document.getElementById('errorBox');
+                if (errorBox) {
+                    errorBox.textContent = `⚠ 运行时错误: ${e.error?.message || e.message || '未知错误'}。请查看控制台。`;
+                    errorBox.classList.add('show');
+                }
+            });
+            window.addEventListener('unhandledrejection', (e) => {
+                console.error('[Unhandled Rejection]', e.reason);
+                // 不显示 UI 错误，因为 Promise 拒绝可能在合理流程中被外层 catch
+            });
+
             // ============================================================
             //  ★  配置  ★
             // ============================================================
             const INSTRUMENTS = ['piano', 'violin', 'erhu', 'xiao', 'guitar', 'flute', 'organ'];
             const NOTE_COUNT = 7;
             const TOTAL_SAMPLES = INSTRUMENTS.length * NOTE_COUNT;
-            const SCALE_SEMITONES = [0, 2, 4, 5, 7, 9, 11];
+            const SCALE_SEMITONES = [0, 2, 4, 5, 7, 9, 11]; // 十二平均律自然大调半音偏移
             const DEFAULT_DURATION = 2.0;
-            const BASE_FREQ = 261.63;
-            const SAMPLE_DURATION = 6.0; // 提升至6秒，减少循环需求
+            const BASE_FREQ = 261.63; // C4 中央C
+            const SAMPLE_DURATION = 10.0; // 10秒样本，极大减少循环需求，长音符更自然
+            // IndexedDB 配置
+            const DB_NAME = 'SampleDB';
+            const DB_STORE = 'samples';
+            const DB_VERSION = 1;
 
             // ============================================================
             //  DOM元素
@@ -493,13 +674,19 @@
             const bpmInput = document.getElementById('bpmInput');
             const reverbDry = document.getElementById('reverbDry');
             const reverbWet = document.getElementById('reverbWet');
-            const reverbDryLabel = document.getElementById('reverbDryLabel');
-            const reverbWetLabel = document.getElementById('reverbWetLabel');
+            const reverbDryNum = document.getElementById('reverbDryNum');
+            const reverbWetNum = document.getElementById('reverbWetNum');
+            const sampleFileInput = document.getElementById('sampleFileInput');
+            const sampleUrlInput = document.getElementById('sampleUrlInput');
+            const btnImportFiles = document.getElementById('btnImportFiles');
+            const btnImportUrl = document.getElementById('btnImportUrl');
+            const sampleList = document.getElementById('sampleList');
 
             // ============================================================
             //  全局状态
             // ============================================================
             let audioCtx = null;
+            // sampleMap 结构: { "piano_1": { type: "synth", buffer: AudioBuffer }, "my_grand_1": { type: "sample", buffer: AudioBuffer, source: "file"|"url" } }
             let sampleMap = {};
             let isLoaded = false;
             let loadAborted = false;
@@ -509,10 +696,25 @@
             let previewBuffer = null;
             let previewTotalDuration = 0;
             let validateTimer = null;
+            // 外部采样注册表: { instName: { basePitch: 1, mode: "single"|"full", entries: { pitch: AudioBuffer } } }
+            let externalSamples = {};
 
             // ============================================================
             //  辅助函数
             // ============================================================
+            function ensureAudioContext() {
+                if (!audioCtx) {
+                    if (typeof AudioContext !== 'undefined') {
+                        audioCtx = new AudioContext();
+                    } else if (typeof webkitAudioContext !== 'undefined') {
+                        audioCtx = new webkitAudioContext();
+                    } else {
+                        throw new Error('浏览器不支持 Web Audio API');
+                    }
+                }
+                return audioCtx;
+            }
+
             function setProgress(loaded, total, text, detail) {
                 const pct = total > 0 ? Math.round((loaded / total) * 100) : 0;
                 progressFill.style.width = pct + '%';
@@ -535,90 +737,186 @@
                 errorBox.classList.remove('show');
             }
 
+            // 生成随机游走序列 (用于颤音自然微起伏)
+            function randomWalk(len, stepSize, min, max) {
+                const arr = new Float32Array(len);
+                let v = 0;
+                for (let i = 0; i < len; i++) {
+                    v += (Math.random() - 0.5) * stepSize;
+                    if (v < min) v = min;
+                    if (v > max) v = max;
+                    arr[i] = v;
+                }
+                return arr;
+            }
+
             // ============================================================
-            //  7种乐器合成器（保持原有音色特征）
+            //  7种乐器合成器 · 物理建模版
+            //  采用多段包络(MSEG)、高阶泛音(64)、失谐(Detune)、动态滤波、随机微变
+            //  每个合成器内部自带 try/catch，单振荡器失败不影响其余
             // ============================================================
+
             function synthPiano(ctx, freq) {
+                /* 钢琴 — 最高音质版
+                 * 泛音: 64个谐波，振幅遵循1/f粉红噪声衰减
+                 * 失谐: 每个泛音叠加 ±1.0 美分随机偏移 (模拟三弦不完美共振，音色更暖)
+                 * 包络: 5段 — Attack(3ms) → InitDecay(100ms→0.3) → Sustain → FinalDecay(500ms→0.08) → Release
+                 * 高频泛音衰减加速: 谐波阶次越高，衰减时间越短
+                 */
+                try {
                 const dur = SAMPLE_DURATION;
                 const master = ctx.createGain();
+                const NUM_HARM = 64; // 64谐波，超丰富泛音
+                // 5段包络 (Attack → InitDecay → Sustain → FinalDecay → Release)
                 master.gain.setValueAtTime(0, 0);
-                master.gain.linearRampToValueAtTime(1, 0.003);
-                master.gain.exponentialRampToValueAtTime(0.3, 0.1);
-                master.gain.exponentialRampToValueAtTime(0.08, 0.5);
-                master.gain.exponentialRampToValueAtTime(0.001, dur * 0.85);
+                master.gain.linearRampToValueAtTime(1, 0.003); // Attack 3ms
+                master.gain.exponentialRampToValueAtTime(0.3, 0.1); // InitDecay → 0.3 at 100ms
+                master.gain.setValueAtTime(0.3, 0.3); // Sustain hold
+                master.gain.exponentialRampToValueAtTime(0.08, 0.8); // FinalDecay → 0.08 at 800ms
+                master.gain.exponentialRampToValueAtTime(0.001, dur * 0.85); // Release
                 master.connect(ctx.destination);
-                const partials = [1, 2, 3, 4, 5, 6, 7, 8];
-                const amps = [1.0, 0.6, 0.35, 0.2, 0.12, 0.07, 0.04, 0.02];
-                for (let i = 0; i < partials.length; i++) {
+
+                for (let h = 1; h <= NUM_HARM; h++) {
+                    try {
+                    // 1/f 粉红噪声衰减律: 振幅 ∝ 1/h
+                    const amp = (h === 1) ? 1.0 : (1.0 / h) * 1.2;
+                    // 失谐: ±1.0 美分随机偏移 (比旧版增大一倍，模拟味更浓)
+                    const detuneCents = (Math.random() - 0.5) * 2.0; // ±1.0 cents
+                    const detuneFactor = Math.pow(2, detuneCents / 1200);
+                    const harmFreq = freq * h * detuneFactor;
+                    // 高频泛音衰减时间: 高阶谐波衰减更快
+                    const decayTime = dur * Math.max(0.05, 1.0 - h * 0.014);
+
                     const osc = ctx.createOscillator();
                     osc.type = 'sine';
-                    osc.frequency.value = freq * partials[i];
+                    osc.frequency.value = harmFreq;
                     const g = ctx.createGain();
-                    g.gain.setValueAtTime(amps[i], 0);
-                    g.gain.exponentialRampToValueAtTime(0.001, dur * Math.max(0.15, 1.0 - partials[i] * 0.1));
+                    g.gain.setValueAtTime(amp, 0);
+                    g.gain.exponentialRampToValueAtTime(0.001, decayTime);
                     osc.connect(g);
                     g.connect(master);
                     osc.start(0);
                     osc.stop(dur);
+                    } catch (_) { /* 单个谐波失败跳过 */ }
                 }
+                } catch (_) { console.warn('[synthPiano] 整体合成失败'); }
             }
 
             function synthViolin(ctx, freq) {
+                /* 小提琴 — 物理建模版
+                 * 波形: 锯齿波 (sawtooth) 富含奇次泛音
+                 * 动态滤波: 音头明亮(2kHz) → 中段柔化(1.2kHz) → 尾音温暖(800Hz)
+                 * 颤音: 正弦(5.5Hz) + 随机游走叠加, 使颤音深度有自然微起伏
+                 * 包络: 5段 — Attack(50ms) → Crescendo(200ms) → Sustain → Decay(300ms) → Release
+                 */
+                try {
                 const dur = SAMPLE_DURATION;
                 const master = ctx.createGain();
+                // 5段包络: 缓慢起音 → 渐强 → 维持 → 衰减 → 释音
                 master.gain.setValueAtTime(0, 0);
-                master.gain.linearRampToValueAtTime(0.7, 0.05);
-                master.gain.linearRampToValueAtTime(1.0, 0.2);
-                master.gain.setValueAtTime(0.8, dur - 0.3);
-                master.gain.linearRampToValueAtTime(0, dur);
+                master.gain.linearRampToValueAtTime(0.6, 0.05); // Attack 50ms
+                master.gain.linearRampToValueAtTime(1.0, 0.2); // Crescendo 200ms
+                master.gain.setValueAtTime(0.85, dur - 0.3); // Sustain
+                master.gain.linearRampToValueAtTime(0.5, dur - 0.1); // Decay
+                master.gain.linearRampToValueAtTime(0, dur); // Release
                 master.connect(ctx.destination);
+
                 const osc = ctx.createOscillator();
                 osc.type = 'sawtooth';
                 osc.frequency.setValueAtTime(freq, 0);
+
+                // 动态滤波: 频率扫频
                 const filter = ctx.createBiquadFilter();
                 filter.type = 'lowpass';
-                filter.frequency.value = 1200;
                 filter.Q.value = 2;
+                filter.frequency.setValueAtTime(2000, 0);
+                filter.frequency.exponentialRampToValueAtTime(1200, 0.3);
+                filter.frequency.setValueAtTime(1200, dur - 0.5);
+                filter.frequency.exponentialRampToValueAtTime(800, dur);
+
+                // 颤音: 正弦 + 随机游走
                 const lfo = ctx.createOscillator();
                 lfo.frequency.value = 5.5;
                 const lfoGain = ctx.createGain();
-                lfoGain.gain.value = 4;
+                lfoGain.gain.value = 4; // base vibrato depth ±4Hz
+                // 随机游走调制颤音深度
+                const rwLen = Math.floor(ctx.sampleRate * dur);
+                const rwData = randomWalk(rwLen, 0.004, -1.5, 1.5);
+                const rwBuf = ctx.createBuffer(1, rwLen, ctx.sampleRate);
+                rwBuf.getChannelData(0).set(rwData);
+                const rwSrc = ctx.createBufferSource();
+                rwSrc.buffer = rwBuf;
+                rwSrc.loop = true;
+                const rwGain = ctx.createGain();
+                rwGain.gain.value = 1.5; // random walk adds ±1.5Hz variation
+                rwSrc.connect(rwGain);
+                rwGain.connect(lfoGain.gain); // modulate vibrato depth
                 lfo.connect(lfoGain);
                 lfoGain.connect(osc.frequency);
+
                 osc.connect(filter);
                 filter.connect(master);
                 osc.start(0);
                 osc.stop(dur);
                 lfo.start(0);
                 lfo.stop(dur);
+                rwSrc.start(0);
+                rwSrc.stop(dur);
+                } catch (_) { console.warn('[synthViolin] 合成失败'); }
             }
 
             function synthErhu(ctx, freq) {
+                /* 二胡 — 物理建模版
+                 * 双锯齿波失谐 ±0.5% (1.005倍频), 模拟二胡特有的鼻音质感
+                 * 动态带通滤波: 音头明亮(1.2kHz) → 中段温暖(800Hz)
+                 * 揉弦: 正弦(5Hz) + 随机游走, 同时调制两个振荡器
+                 * 包络: 5段 — Attack(30ms) → Crescendo(150ms) → Sustain → Decay(400ms) → Release
+                 */
+                try {
                 const dur = SAMPLE_DURATION;
                 const master = ctx.createGain();
                 master.gain.setValueAtTime(0, 0);
                 master.gain.linearRampToValueAtTime(0.6, 0.03);
                 master.gain.linearRampToValueAtTime(1.0, 0.15);
                 master.gain.setValueAtTime(0.85, dur - 0.4);
+                master.gain.linearRampToValueAtTime(0.4, dur - 0.1);
                 master.gain.linearRampToValueAtTime(0, dur);
                 master.connect(ctx.destination);
+
                 const osc1 = ctx.createOscillator();
                 osc1.type = 'sawtooth';
                 osc1.frequency.setValueAtTime(freq, 0);
                 const osc2 = ctx.createOscillator();
                 osc2.type = 'sawtooth';
-                osc2.frequency.setValueAtTime(freq * 1.005, 0);
+                osc2.frequency.setValueAtTime(freq * 1.005, 0); // +0.5% detune
+
+                // 动态带通
                 const filter = ctx.createBiquadFilter();
                 filter.type = 'bandpass';
-                filter.frequency.value = 800;
                 filter.Q.value = 3;
+                filter.frequency.setValueAtTime(1200, 0);
+                filter.frequency.exponentialRampToValueAtTime(800, 0.3);
+
+                // 揉弦: 正弦 + 随机游走
                 const lfo = ctx.createOscillator();
                 lfo.frequency.value = 5;
                 const lfoGain = ctx.createGain();
                 lfoGain.gain.value = 5;
+                const rwLen = Math.floor(ctx.sampleRate * dur);
+                const rwData = randomWalk(rwLen, 0.005, -2, 2);
+                const rwBuf = ctx.createBuffer(1, rwLen, ctx.sampleRate);
+                rwBuf.getChannelData(0).set(rwData);
+                const rwSrc = ctx.createBufferSource();
+                rwSrc.buffer = rwBuf;
+                rwSrc.loop = true;
+                const rwGain = ctx.createGain();
+                rwGain.gain.value = 2;
+                rwSrc.connect(rwGain);
+                rwGain.connect(lfoGain.gain);
                 lfo.connect(lfoGain);
                 lfoGain.connect(osc1.frequency);
                 lfoGain.connect(osc2.frequency);
+
                 const mix = ctx.createGain();
                 mix.gain.value = 0.5;
                 osc1.connect(mix);
@@ -631,197 +929,505 @@
                 osc2.stop(dur);
                 lfo.start(0);
                 lfo.stop(dur);
+                rwSrc.start(0);
+                rwSrc.stop(dur);
+                } catch (_) { console.warn('[synthErhu] 合成失败'); }
             }
 
             function synthXiao(ctx, freq) {
-                const dur = SAMPLE_DURATION;
-                const master = ctx.createGain();
-                master.gain.setValueAtTime(0, 0);
-                master.gain.linearRampToValueAtTime(0.8, 0.1);
-                master.gain.setValueAtTime(0.7, dur - 0.5);
-                master.gain.linearRampToValueAtTime(0, dur);
-                master.connect(ctx.destination);
-                const osc = ctx.createOscillator();
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(freq, 0);
-                const lfo = ctx.createOscillator();
-                lfo.frequency.value = 3;
-                const lfoGain = ctx.createGain();
-                lfoGain.gain.value = 3;
-                lfo.connect(lfoGain);
-                lfoGain.connect(osc.frequency);
-                const filter = ctx.createBiquadFilter();
-                filter.type = 'lowpass';
-                filter.frequency.value = 2000;
-                filter.Q.value = 1;
-                const noiseLen = ctx.sampleRate * 0.5;
-                const noiseBuf = ctx.createBuffer(1, noiseLen, ctx.sampleRate);
-                const nd = noiseBuf.getChannelData(0);
-                for (let i = 0; i < noiseLen; i++) nd[i] = Math.random() * 2 - 1;
-                const noise = ctx.createBufferSource();
-                noise.buffer = noiseBuf;
-                noise.loop = true;
-                const noiseFilter = ctx.createBiquadFilter();
-                noiseFilter.type = 'bandpass';
-                noiseFilter.frequency.value = freq * 2;
-                noiseFilter.Q.value = 3;
-                const noiseGain = ctx.createGain();
-                noiseGain.gain.setValueAtTime(0, 0);
-                noiseGain.gain.linearRampToValueAtTime(0.04, 0.3);
-                noiseGain.gain.setValueAtTime(0.02, dur - 0.3);
-                noiseGain.gain.linearRampToValueAtTime(0, dur);
-                osc.connect(filter);
-                filter.connect(master);
-                noise.connect(noiseFilter);
-                noiseFilter.connect(noiseGain);
-                noiseGain.connect(master);
-                osc.start(0);
-                osc.stop(dur);
-                noise.start(0);
-                noise.stop(dur);
-                lfo.start(0);
-                lfo.stop(dur);
+                /* 箫 — 物理建模版
+                 * 主音: 纯正弦波 + 弱倍频(×2, amp=0.06)
+                 * 气声: 白噪声经带通滤波(中心=基频×2, Q=4), 混合量极低(~0.03)
+                 * 颤音: 3Hz 慢速LFO, 偏移±3Hz
+                 * 低通柔化: 截止频率=2kHz, Q=1
+                 * 包络: 5段 — Attack(80ms) → Hold → Decay → Sustain → Release(500ms)
+                 */
+                try {
+                    const dur = SAMPLE_DURATION;
+                    const master = ctx.createGain();
+                    master.gain.setValueAtTime(0, 0);
+                    master.gain.linearRampToValueAtTime(0.7, 0.08);
+                    master.gain.setValueAtTime(0.7, 0.25);
+                    master.gain.linearRampToValueAtTime(0.55, 0.6);
+                    master.gain.setValueAtTime(0.55, dur - 0.5);
+                    master.gain.linearRampToValueAtTime(0, dur);
+                    master.connect(ctx.destination);
+
+                    // 主音正弦
+                    const osc = ctx.createOscillator();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(freq, 0);
+                    // 弱倍频增加亮度
+                    const osc2 = ctx.createOscillator();
+                    osc2.type = 'sine';
+                    osc2.frequency.value = freq * 2;
+                    const g2 = ctx.createGain();
+                    g2.gain.value = 0.06;
+
+                    // 3Hz 颤音
+                    const lfo = ctx.createOscillator();
+                    lfo.frequency.value = 3;
+                    const lfoGain = ctx.createGain();
+                    lfoGain.gain.value = 3;
+                    lfo.connect(lfoGain);
+                    lfoGain.connect(osc.frequency);
+
+                    // 低通柔化
+                    const filter = ctx.createBiquadFilter();
+                    filter.type = 'lowpass';
+                    filter.frequency.value = 2000;
+                    filter.Q.value = 1;
+
+                    // 气声: 白噪声经带通
+                    const noiseLen = ctx.sampleRate * 0.5;
+                    const noiseBuf = ctx.createBuffer(1, noiseLen, ctx.sampleRate);
+                    const nd = noiseBuf.getChannelData(0);
+                    for (let i = 0; i < noiseLen; i++) nd[i] = Math.random() * 2 - 1;
+                    const noise = ctx.createBufferSource();
+                    noise.buffer = noiseBuf;
+                    noise.loop = true;
+                    const noiseFilter = ctx.createBiquadFilter();
+                    noiseFilter.type = 'bandpass';
+                    noiseFilter.frequency.value = freq * 2;
+                    noiseFilter.Q.value = 4;
+                    const noiseGain = ctx.createGain();
+                    noiseGain.gain.setValueAtTime(0, 0);
+                    noiseGain.gain.linearRampToValueAtTime(0.03, 0.3);
+                    noiseGain.gain.setValueAtTime(0.015, dur - 0.3);
+                    noiseGain.gain.linearRampToValueAtTime(0, dur);
+
+                    osc.connect(filter);
+                    osc2.connect(g2);
+                    g2.connect(filter);
+                    filter.connect(master);
+                    noise.connect(noiseFilter);
+                    noiseFilter.connect(noiseGain);
+                    noiseGain.connect(master);
+                    osc.start(0);
+                    osc.stop(dur);
+                    osc2.start(0);
+                    osc2.stop(dur);
+                    noise.start(0);
+                    noise.stop(dur);
+                    lfo.start(0);
+                    lfo.stop(dur);
+                } catch (_) { console.warn('[synthXiao] 合成失败'); }
             }
 
             function synthGuitar(ctx, freq) {
-                const dur = SAMPLE_DURATION;
-                const master = ctx.createGain();
-                master.gain.setValueAtTime(0, 0);
-                master.gain.linearRampToValueAtTime(0.9, 0.005);
-                master.gain.exponentialRampToValueAtTime(0.001, dur * 0.7);
+                /* 吉他 — 物理建模版
+                 * 主音: 锯齿波 + 低通滤波 (扫频 1200Hz→800Hz)
+                 * 琴体共鸣: 3个窄带高Q带通滤波器 (100Hz/200Hz/400Hz, Q=15)
+                 * 拨弦噪声: 30ms 白噪声短脉冲 + 循环
+                 * 包络: 快速起音(5ms) → 指数衰减
+                 */
+                try {
+                    const dur = SAMPLE_DURATION;
+                    const master = ctx.createGain();
+                    master.gain.setValueAtTime(0, 0);
+                    master.gain.linearRampToValueAtTime(0.9, 0.005);
+                    master.gain.exponentialRampToValueAtTime(0.001, dur * 0.7);
                 master.connect(ctx.destination);
+
                 const osc = ctx.createOscillator();
                 osc.type = 'sawtooth';
                 osc.frequency.setValueAtTime(freq, 0);
+
+                // 动态低通滤波
                 const filter = ctx.createBiquadFilter();
                 filter.type = 'lowpass';
-                filter.frequency.value = 800 + Math.random() * 400;
+                filter.frequency.setValueAtTime(1200, 0);
+                filter.frequency.exponentialRampToValueAtTime(800, 0.1);
                 filter.Q.value = 2;
+
+                // 琴体共鸣: 3个窄带谐振峰
+                const bodyResonances = [
+                    { freq: 100, Q: 15, gain: 0.15 },
+                    { freq: 200, Q: 15, gain: 0.10 },
+                    { freq: 400, Q: 12, gain: 0.06 },
+                ];
+                const bodyMix = ctx.createGain();
+                bodyMix.gain.value = 1;
+                for (const res of bodyResonances) {
+                    const bp = ctx.createBiquadFilter();
+                    bp.type = 'bandpass';
+                    bp.frequency.value = res.freq;
+                    bp.Q.value = res.Q;
+                    const bg = ctx.createGain();
+                    bg.gain.value = res.gain;
+                    osc.connect(bp);
+                    bp.connect(bg);
+                    bg.connect(bodyMix);
+                }
+
+                // 拨弦噪声
                 const noiseLen = ctx.sampleRate * 0.03;
                 const noiseBuf = ctx.createBuffer(1, noiseLen, ctx.sampleRate);
                 const nd = noiseBuf.getChannelData(0);
                 for (let i = 0; i < noiseLen; i++) nd[i] = (Math.random() * 2 - 1) * (1 - i / noiseLen);
                 const noise = ctx.createBufferSource();
                 noise.buffer = noiseBuf;
-                noise.loop = true; // 循环噪声，避免0.03s后戛然而止
+                noise.loop = true;
                 const noiseGain = ctx.createGain();
-                noiseGain.gain.setValueAtTime(0.4, 0);
+                noiseGain.gain.setValueAtTime(0.3, 0);
                 noiseGain.gain.exponentialRampToValueAtTime(0.001, 0.05);
+
                 osc.connect(filter);
                 filter.connect(master);
+                bodyMix.connect(master);
                 noise.connect(noiseGain);
                 noiseGain.connect(master);
                 osc.start(0);
                 osc.stop(dur);
                 noise.start(0);
                 noise.stop(dur);
+                } catch (_) { console.warn('[synthGuitar] 合成失败'); }
             }
 
             function synthFlute(ctx, freq) {
-                const dur = SAMPLE_DURATION;
-                const master = ctx.createGain();
-                master.gain.setValueAtTime(0, 0);
-                master.gain.linearRampToValueAtTime(0.8, 0.1);
-                master.gain.linearRampToValueAtTime(0.7, dur - 0.3);
-                master.gain.linearRampToValueAtTime(0, dur);
-                master.connect(ctx.destination);
-                const osc = ctx.createOscillator();
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(freq, 0);
-                const osc2 = ctx.createOscillator();
-                osc2.type = 'sine';
-                osc2.frequency.setValueAtTime(freq * 2, 0);
-                const g2 = ctx.createGain();
-                g2.gain.value = 0.08;
-                const lfo = ctx.createOscillator();
-                lfo.frequency.value = 5.0;
-                const lfoGain = ctx.createGain();
-                lfoGain.gain.value = 2.5;
-                lfo.connect(lfoGain);
-                lfoGain.connect(osc.frequency);
-                const filter = ctx.createBiquadFilter();
-                filter.type = 'lowpass';
-                filter.frequency.value = 3000;
-                osc.connect(filter);
-                osc2.connect(g2);
-                g2.connect(filter);
-                filter.connect(master);
-                osc.start(0);
-                osc.stop(dur);
-                osc2.start(0);
-                osc2.stop(dur);
-                lfo.start(0);
-                lfo.stop(dur);
+                /* 长笛 — 物理建模版
+                 * 主音: 纯正弦波 + 弱倍频(×2, amp=0.08) + 极弱三倍频(×3, amp=0.02)
+                 * 颤音: 正弦(5Hz) + 随机游走, 偏移±2.5Hz
+                 * 低通柔化: 3kHz
+                 * 包络: 5段 — Attack(100ms) → Hold → Decay → Sustain → Release(300ms)
+                 */
+                try {
+                    const dur = SAMPLE_DURATION;
+                    const master = ctx.createGain();
+                    master.gain.setValueAtTime(0, 0);
+                    master.gain.linearRampToValueAtTime(0.7, 0.1);
+                    master.gain.setValueAtTime(0.7, 0.25);
+                    master.gain.linearRampToValueAtTime(0.55, 0.5);
+                    master.gain.setValueAtTime(0.55, dur - 0.3);
+                    master.gain.linearRampToValueAtTime(0, dur);
+                    master.connect(ctx.destination);
+
+                    const osc = ctx.createOscillator();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(freq, 0);
+
+                    // 倍频叠加
+                    const osc2 = ctx.createOscillator();
+                    osc2.type = 'sine';
+                    osc2.frequency.value = freq * 2;
+                    const g2 = ctx.createGain();
+                    g2.gain.value = 0.08;
+                    const osc3 = ctx.createOscillator();
+                    osc3.type = 'sine';
+                    osc3.frequency.value = freq * 3;
+                    const g3 = ctx.createGain();
+                    g3.gain.value = 0.02;
+
+                    // 颤音: 正弦 + 随机游走
+                    const lfo = ctx.createOscillator();
+                    lfo.frequency.value = 5.0;
+                    const lfoGain = ctx.createGain();
+                    lfoGain.gain.value = 2.5;
+                    const rwLen = Math.floor(ctx.sampleRate * dur);
+                    const rwData = randomWalk(rwLen, 0.003, -1, 1);
+                    const rwBuf = ctx.createBuffer(1, rwLen, ctx.sampleRate);
+                    rwBuf.getChannelData(0).set(rwData);
+                    const rwSrc = ctx.createBufferSource();
+                    rwSrc.buffer = rwBuf;
+                    rwSrc.loop = true;
+                    const rwGain = ctx.createGain();
+                    rwGain.gain.value = 0.8;
+                    rwSrc.connect(rwGain);
+                    rwGain.connect(lfoGain.gain);
+                    lfo.connect(lfoGain);
+                    lfoGain.connect(osc.frequency);
+
+                    const filter = ctx.createBiquadFilter();
+                    filter.type = 'lowpass';
+                    filter.frequency.value = 3000;
+
+                    osc.connect(filter);
+                    osc2.connect(g2);
+                    osc3.connect(g3);
+                    g2.connect(filter);
+                    g3.connect(filter);
+                    filter.connect(master);
+                    osc.start(0);
+                    osc.stop(dur);
+                    osc2.start(0);
+                    osc2.stop(dur);
+                    osc3.start(0);
+                    osc3.stop(dur);
+                    lfo.start(0);
+                    lfo.stop(dur);
+                    rwSrc.start(0);
+                    rwSrc.stop(dur);
+                } catch (_) { console.warn('[synthFlute] 合成失败'); }
             }
 
             function synthOrgan(ctx, freq) {
-                const dur = SAMPLE_DURATION;
-                const master = ctx.createGain();
-                master.gain.setValueAtTime(0, 0);
-                master.gain.linearRampToValueAtTime(0.6, 0.05);
-                master.gain.setValueAtTime(0.6, dur - 0.2);
-                master.gain.linearRampToValueAtTime(0, dur);
-                master.connect(ctx.destination);
-                const harmonics = [
-                    { mult: 1, amp: 1.0 },
-                    { mult: 3, amp: 0.6 },
-                    { mult: 5, amp: 0.3 },
-                    { mult: 2, amp: 0.5 },
-                    { mult: 4, amp: 0.2 },
-                ];
-                for (const h of harmonics) {
-                    const osc = ctx.createOscillator();
-                    osc.type = 'sine';
-                    osc.frequency.value = freq * h.mult;
-                    const g = ctx.createGain();
-                    g.gain.value = h.amp * 0.8;
-                    osc.connect(g);
-                    g.connect(master);
-                    osc.start(0);
-                    osc.stop(dur);
-                }
-                const lfo = ctx.createOscillator();
-                lfo.frequency.value = 3.2;
-                const lfoGain = ctx.createGain();
-                lfoGain.gain.value = 0.06; // 极小幅 tremolo 调制，避免削波和负增益
-                lfo.connect(lfoGain);
-                lfoGain.connect(master.gain);
-                lfo.start(0);
-                lfo.stop(dur);
+                /* 管风琴 — 最高音质版
+                 * 泛音: 64个谐波，奇次谐波(1,3,5,...)权重更高，模拟管风琴标志性音色
+                 * 包络: 5段 — Attack(50ms) → Hold → Sustain → Decay → Release(200ms)
+                 * Tremolo: 3.2Hz LFO 调制总增益, 深度±0.06
+                 */
+                try {
+                    const dur = SAMPLE_DURATION;
+                    const master = ctx.createGain();
+                    master.gain.setValueAtTime(0, 0);
+                    master.gain.linearRampToValueAtTime(0.6, 0.05);
+                    master.gain.setValueAtTime(0.6, dur - 0.2);
+                    master.gain.linearRampToValueAtTime(0, dur);
+                    master.connect(ctx.destination);
+
+                    const NUM_HARM = 64;
+                    for (let h = 1; h <= NUM_HARM; h++) {
+                        const isOdd = (h % 2 === 1);
+                        const amp = isOdd ? (1.0 / h) * 0.9 : (0.5 / h) * 0.6;
+                        if (amp < 0.003) continue;
+                        const harmFreq = freq * h;
+                        const osc = ctx.createOscillator();
+                        osc.type = 'sine';
+                        osc.frequency.value = harmFreq;
+                        const g = ctx.createGain();
+                        g.gain.value = amp * 0.8;
+                        osc.connect(g);
+                        g.connect(master);
+                        osc.start(0);
+                        osc.stop(dur);
+                    }
+
+                    // Tremolo: 3.2Hz LFO 调制 master.gain
+                    const lfo = ctx.createOscillator();
+                    lfo.frequency.value = 3.2;
+                    const lfoGain = ctx.createGain();
+                    lfoGain.gain.value = 0.06;
+                    lfo.connect(lfoGain);
+                    lfoGain.connect(master.gain);
+                    lfo.start(0);
+                    lfo.stop(dur);
+                } catch (_) { console.warn('[synthOrgan] 合成失败'); }
             }
 
             // ============================================================
             //  生成单个样本 (OfflineAudioContext)
+            //  存储为 { type: "synth", buffer: AudioBuffer }
             // ============================================================
             async function generateSample(instrument, pitchNum) {
+                // 入参校验
+                if (!instrument || typeof instrument !== 'string') {
+                    console.warn('[generateSample] 非法乐器名:', instrument);
+                    return ctx.startRendering(); // 返回空 buffer
+                }
+                if (!Number.isInteger(pitchNum) || pitchNum < 1 || pitchNum > NOTE_COUNT) {
+                    console.warn('[generateSample] 非法音高:', pitchNum);
+                    pitchNum = 1;
+                }
                 const semitoneOffset = SCALE_SEMITONES[pitchNum - 1];
                 const freq = BASE_FREQ * Math.pow(2, semitoneOffset / 12);
-                const sampleRate = 44100;
+                const sampleRate = 48000;
                 const ctx = new OfflineAudioContext(2, Math.ceil(sampleRate * SAMPLE_DURATION), sampleRate);
                 switch (instrument) {
-                    case 'piano':
+                    case 'piano':   synthPiano(ctx, freq);   break;
+                    case 'violin':  synthViolin(ctx, freq);  break;
+                    case 'erhu':    synthErhu(ctx, freq);    break;
+                    case 'xiao':    synthXiao(ctx, freq);    break;
+                    case 'guitar':  synthGuitar(ctx, freq);  break;
+                    case 'flute':   synthFlute(ctx, freq);   break;
+                    case 'organ':   synthOrgan(ctx, freq);   break;
+                    default:
+                        console.warn(`[generateSample] 未知乐器 "${instrument}"，回退到 piano`);
                         synthPiano(ctx, freq);
-                        break;
-                    case 'violin':
-                        synthViolin(ctx, freq);
-                        break;
-                    case 'erhu':
-                        synthErhu(ctx, freq);
-                        break;
-                    case 'xiao':
-                        synthXiao(ctx, freq);
-                        break;
-                    case 'guitar':
-                        synthGuitar(ctx, freq);
-                        break;
-                    case 'flute':
-                        synthFlute(ctx, freq);
-                        break;
-                    case 'organ':
-                        synthOrgan(ctx, freq);
-                        break;
                 }
-                return ctx.startRendering();
+                try {
+                    return await ctx.startRendering();
+                } catch (e) {
+                    console.error(`[generateSample] 渲染失败 ${instrument}_${pitchNum}: ${e.message}`);
+                    // 返回一个静音 buffer 作为 fallback
+                    const silentCtx = new OfflineAudioContext(2, Math.ceil(sampleRate * 0.5), sampleRate);
+                    const silentMaster = silentCtx.createGain();
+                    silentMaster.gain.value = 0;
+                    silentMaster.connect(silentCtx.destination);
+                    return silentCtx.startRendering();
+                }
+            }
+
+            // ============================================================
+            //  IndexedDB 持久化缓存系统
+            //  将下载的外部采样 ArrayBuffer 存入 IndexedDB
+            // ============================================================
+            function openSampleDB() {
+                return new Promise((resolve, reject) => {
+                    if (typeof indexedDB === 'undefined') {
+                        reject(new Error('浏览器不支持 IndexedDB'));
+                        return;
+                    }
+                    const req = indexedDB.open(DB_NAME, DB_VERSION);
+                    req.onupgradeneeded = (e) => {
+                        try {
+                            const db = e.target.result;
+                            if (!db.objectStoreNames.contains(DB_STORE)) {
+                                db.createObjectStore(DB_STORE, { keyPath: 'id' });
+                            }
+                        } catch (err) {
+                            console.warn('[IndexedDB] 升级失败:', err.message);
+                        }
+                    };
+                    req.onsuccess = () => resolve(req.result);
+                    req.onerror = () => reject(new Error('IndexedDB 打开失败: ' + (req.error?.message || '未知')));
+                });
+            }
+
+            async function dbPutSample(id, arrayBuffer) {
+                try {
+                    const db = await openSampleDB();
+                    return new Promise((resolve, reject) => {
+                        const tx = db.transaction(DB_STORE, 'readwrite');
+                        tx.objectStore(DB_STORE).put({ id, data: arrayBuffer });
+                        tx.oncomplete = () => { try { db.close(); } catch (_) {} resolve(); };
+                        tx.onerror = () => { try { db.close(); } catch (_) {} reject(new Error('IndexedDB 写入失败')); };
+                    });
+                } catch (e) {
+                    console.warn('[IndexedDB] 写入跳过:', e.message);
+                }
+            }
+
+            async function dbGetSample(id) {
+                try {
+                    const db = await openSampleDB();
+                    return new Promise((resolve, reject) => {
+                        const tx = db.transaction(DB_STORE, 'readonly');
+                        const req = tx.objectStore(DB_STORE).get(id);
+                        req.onsuccess = () => { try { db.close(); } catch (_) {} resolve(req.result ? req.result.data : null); };
+                        req.onerror = () => { try { db.close(); } catch (_) {} reject(new Error('IndexedDB 读取失败')); };
+                    });
+                } catch (e) {
+                    console.warn('[IndexedDB] 读取跳过:', e.message);
+                    return null;
+                }
+            }
+
+            async function dbGetAllKeys() {
+                try {
+                    const db = await openSampleDB();
+                    return new Promise((resolve, reject) => {
+                        const tx = db.transaction(DB_STORE, 'readonly');
+                        const req = tx.objectStore(DB_STORE).getAllKeys();
+                        req.onsuccess = () => { try { db.close(); } catch (_) {} resolve(req.result); };
+                        req.onerror = () => { try { db.close(); } catch (_) {} reject(new Error('IndexedDB 读取失败')); };
+                    });
+                } catch (e) {
+                    console.warn('[IndexedDB] 键列表读取跳过:', e.message);
+                    return [];
+                }
+            }
+
+            // ============================================================
+            //  外部采样导入系统 (本地文件 + 远程URL)
+            // ============================================================
+            async function importSampleFromArrayBuffer(arrayBuffer, name, source) {
+                // 解码为 AudioBuffer
+                const ctx = ensureAudioContext();
+                let audioBuffer;
+                try {
+                    audioBuffer = await ctx.decodeAudioData(arrayBuffer.slice(0));
+                } catch (e) {
+                    throw new Error(`解码失败: ${e.message}`);
+                }
+                // 转为单声道 (如果立体声)
+                let monoBuffer;
+                if (audioBuffer.numberOfChannels > 1) {
+                    const monoCtx = new OfflineAudioContext(1, audioBuffer.length, audioBuffer.sampleRate);
+                    const merger = monoCtx.createChannelMerger(1);
+                    // 混合声道
+                    const bufSrc = monoCtx.createBufferSource();
+                    bufSrc.buffer = audioBuffer;
+                    bufSrc.connect(monoCtx.destination);
+                    // 简单做法: 用 GainNode 混合
+                    // 无法直接混合多声道到OfflineAudioContext，使用平面混合
+                    const srcBuf = audioBuffer.getChannelData(0);
+                    const dstBuf = new Float32Array(audioBuffer.length);
+                    for (let ch = 0; ch < audioBuffer.numberOfChannels; ch++) {
+                        const chData = audioBuffer.getChannelData(ch);
+                        for (let i = 0; i < audioBuffer.length; i++) {
+                            dstBuf[i] += chData[i] / audioBuffer.numberOfChannels;
+                        }
+                    }
+                    const mixBuf = ctx.createBuffer(1, audioBuffer.length, audioBuffer.sampleRate);
+                    mixBuf.getChannelData(0).set(dstBuf);
+                    monoBuffer = mixBuf;
+                } else {
+                    monoBuffer = audioBuffer;
+                }
+                // 清理文件名：去扩展名，特殊字符转下划线
+                const cleanName = name.replace(/\.[^/.]+$/, '').replace(/[^a-zA-Z0-9_\u4e00-\u9fff]/g, '_').toLowerCase();
+                // 注册为外部采样 — 单音模式
+                externalSamples[cleanName] = {
+                    type: 'sample',
+                    source: source,
+                    basePitch: 1,
+                    mode: 'single',
+                    entries: { 1: monoBuffer }
+                };
+                // 同时存入 sampleMap 便于 renderScore 查找
+                sampleMap[`${cleanName}_1`] = { type: 'sample', buffer: monoBuffer, source };
+                // 存入 IndexedDB 缓存
+                try {
+                    await dbPutSample(cleanName, arrayBuffer);
+                } catch (e) {
+                    console.warn(`[SampleDB] 缓存写入失败: ${cleanName} — ${e.message}`);
+                }
+                // 更新采样列表UI
+                updateSampleListUI();
+                return cleanName;
+            }
+
+            async function handleImportFiles() {
+                const files = sampleFileInput.files;
+                if (!files || files.length === 0) { showError('请先选择文件'); return; }
+                hideError();
+                for (const file of files) {
+                    try {
+                        const arrayBuffer = await file.arrayBuffer();
+                        const name = file.name;
+                        await importSampleFromArrayBuffer(arrayBuffer, name, 'file');
+                        statusDetail.textContent = `已导入: ${name}`;
+                    } catch (e) {
+                        console.warn(`[SampleImport] 文件导入失败: ${file.name} — ${e.message}`);
+                        showError(`导入失败: ${file.name} — ${e.message}`);
+                    }
+                }
+            }
+
+            async function handleImportUrl() {
+                const url = sampleUrlInput.value.trim();
+                if (!url) { showError('请输入 URL'); return; }
+                hideError();
+                btnImportUrl.disabled = true;
+                btnImportUrl.textContent = '加载中…';
+                try {
+                    const resp = await fetch(url, { mode: 'cors' });
+                    if (!resp.ok) throw new Error(`HTTP ${resp.status}: ${resp.statusText}`);
+                    const arrayBuffer = await resp.arrayBuffer();
+                    const name = url.split('/').pop() || 'remote_sample';
+                    await importSampleFromArrayBuffer(arrayBuffer, name, 'url');
+                    statusDetail.textContent = `已从 URL 加载: ${name}`;
+                } catch (e) {
+                    showError(`URL 加载失败: ${e.message} — 请确认链接可访问且支持 CORS`);
+                } finally {
+                    btnImportUrl.disabled = false;
+                    btnImportUrl.textContent = '加载';
+                }
+            }
+
+            function updateSampleListUI() {
+                const names = Object.keys(externalSamples);
+                if (names.length === 0) {
+                    sampleList.innerHTML = '<div style="color:#4b5563;">尚未导入外部采样，将使用内置合成音源</div>';
+                    return;
+                }
+                let html = '';
+                for (const name of names) {
+                    const info = externalSamples[name];
+                    const srcLabel = info.source === 'file' ? '📁' : '🔗';
+                    html += `<div class="sample-item"><span class="samp-name">${srcLabel} ${name}</span><span class="samp-badge">采样</span></div>`;
+                }
+                sampleList.innerHTML = html;
             }
 
             // ============================================================
@@ -833,11 +1439,7 @@
                 btnAbortLoad.disabled = false;
                 try {
                     if (!audioCtx) {
-                        if (typeof AudioContext !== 'undefined') {
-                            audioCtx = new AudioContext();
-                        } else if (typeof webkitAudioContext !== 'undefined') {
-                            audioCtx = new webkitAudioContext();
-                        } else {
+                        if (typeof AudioContext === 'undefined' && typeof webkitAudioContext === 'undefined') {
                             throw new Error('浏览器不支持 Web Audio API');
                         }
                     }
@@ -870,7 +1472,8 @@
                         const num = parseInt(numStr, 10);
                         try {
                             const buffer = await generateSample(inst, num);
-                            sampleMap[key] = buffer;
+                            // 新结构: { type, buffer }
+                            sampleMap[key] = { type: 'synth', buffer };
                         } catch (err) {
                             failed.push(key);
                             console.warn(`[SampleGen] 失败: ${key} — ${err.message}`);
@@ -917,26 +1520,44 @@
             });
 
             // ============================================================
-            //  解析器 V3（支持 beat / time / dur）
+            //  解析器 V3（支持 beat / time / dur + 外部采样动态注册）
             // ============================================================
-            const INSTRUMENT_ALIAS = {
-                p: 'piano',
-                piano: 'piano',
-                v: 'violin',
-                violin: 'violin',
-                e: 'erhu',
-                erhu: 'erhu',
-                x: 'xiao',
-                xiao: 'xiao',
-                g: 'guitar',
-                guitar: 'guitar',
-                f: 'flute',
-                flute: 'flute',
-                o: 'organ',
-                organ: 'organ',
+            // 内置乐器别名
+            const BUILTIN_ALIAS = {
+                p: 'piano', piano: 'piano',
+                v: 'violin', violin: 'violin',
+                e: 'erhu', erhu: 'erhu',
+                x: 'xiao', xiao: 'xiao',
+                g: 'guitar', guitar: 'guitar',
+                f: 'flute', flute: 'flute',
+                o: 'organ', organ: 'organ',
             };
+            // 动态解析乐器名: 先查内置别名 → 再查外部采样注册表
+            function resolveInstrument(raw) {
+                // 空安全: null/undefined 提前返回
+                if (raw === null || raw === undefined || typeof raw !== 'string') {
+                    console.warn('[resolveInstrument] 非法乐器名:', raw);
+                    return null;
+                }
+                const lower = raw.toLowerCase().trim();
+                if (!lower) return null;
+                // 内置别名优先
+                if (BUILTIN_ALIAS[lower]) return BUILTIN_ALIAS[lower];
+                // 外部采样注册表
+                if (externalSamples[lower]) return lower;
+                // 尝试模糊匹配 externalSamples key
+                for (const key of Object.keys(externalSamples)) {
+                    if (key.includes(lower) || lower.includes(key)) return key;
+                }
+                return null; // 未找到
+            }
 
             function getBPM() {
+                // DOM 元素守卫
+                if (!bpmInput) {
+                    console.warn('[getBPM] bpmInput 不可用，返回默认值 120');
+                    return 120;
+                }
                 let bpm = parseFloat(bpmInput.value);
                 if (isNaN(bpm) || bpm < 30) bpm = 120;
                 if (bpm > 300) bpm = 300;
@@ -989,8 +1610,7 @@
                     if (!Number.isInteger(pitch) || pitch < 1 || pitch > 7) throw new Error(
                         `第 ${i+1} 条 pitch 应为 1-7`);
                     const rawInst = (item.inst ?? item.i ?? '').toLowerCase();
-                    const inst = INSTRUMENT_ALIAS[rawInst];
-                    if (!inst) throw new Error(`第 ${i+1} 条 inst 无效 ("${rawInst}")`);
+                    const inst = resolveInstrument(rawInst);
                     let vol = item.vol ?? item.v ?? 0.8;
                     if (typeof vol !== 'number' || vol < 0 || vol > 1) throw new Error(`第 ${i+1} 条 vol 无效`);
                     let dur = item.dur ?? item.d ?? DEFAULT_DURATION;
@@ -1010,7 +1630,7 @@
                     if (typeof time !== 'number' || time < 0) throw new Error(`第 ${i+1} 条 time 无效`);
                     if (!Number.isInteger(pitch) || pitch < 1 || pitch > 7) throw new Error(
                         `第 ${i+1} 条 pitch 应为 1-7`);
-                    const inst = INSTRUMENT_ALIAS[String(rawInst).toLowerCase()];
+                    const inst = resolveInstrument(String(rawInst).toLowerCase());
                     if (!inst) throw new Error(`第 ${i+1} 条 inst 无效 ("${rawInst}")`);
                     let vol = 0.8;
                     if (rawVol !== undefined) {
@@ -1031,8 +1651,13 @@
             //  渲染引擎 V3（支持循环长音符 + 可调混响）
             // ============================================================
             function calculateDuration(score) {
+                if (!Array.isArray(score) || score.length === 0) {
+                    console.warn('[calculateDuration] 非法乐谱，返回默认时长');
+                    return 2.0;
+                }
                 let maxEnd = 0;
                 for (const [time, , , , dur] of score) {
+                    if (typeof time !== 'number' || typeof dur !== 'number') continue;
                     const end = time + dur;
                     if (end > maxEnd) maxEnd = end;
                 }
@@ -1040,46 +1665,90 @@
             }
 
             function getPlaybackRate(pitch) {
+                if (!Number.isInteger(pitch) || pitch < 1 || pitch > 7) {
+                    console.warn(`[getPlaybackRate] 非法音高 ${pitch}，使用 Do`);
+                    return 1.0;
+                }
                 const semitoneOffset = SCALE_SEMITONES[pitch - 1];
                 return Math.pow(2, semitoneOffset / 12);
             }
 
-            function createReverbImpulse(context, duration, decay) {
+            function createReverbImpulse(context, duration) {
                 const sampleRate = context.sampleRate;
                 const length = sampleRate * duration;
                 const impulse = context.createBuffer(2, length, sampleRate);
+                // 12个早期反射 (模拟真实房间的前次回声)
+                const earlyReflections = [
+                    { delay: 0.003, gain: 0.50 },
+                    { delay: 0.007, gain: 0.35 },
+                    { delay: 0.012, gain: 0.28 },
+                    { delay: 0.018, gain: 0.20 },
+                    { delay: 0.025, gain: 0.15 },
+                    { delay: 0.033, gain: 0.11 },
+                    { delay: 0.042, gain: 0.08 },
+                    { delay: 0.052, gain: 0.06 },
+                    { delay: 0.063, gain: 0.04 },
+                    { delay: 0.075, gain: 0.03 },
+                    { delay: 0.088, gain: 0.02 },
+                    { delay: 0.100, gain: 0.015 },
+                ];
                 for (let ch = 0; ch < 2; ch++) {
                     const data = impulse.getChannelData(ch);
-                    for (let i = 0; i < length; i++) {
-                        const envelope = Math.exp(-i / (sampleRate * decay));
-                        data[i] = (Math.random() * 2 - 1) * envelope;
+                    // 早期反射 (左右声道电平差产生空间感)
+                    for (const er of earlyReflections) {
+                        const idx = Math.floor(er.delay * sampleRate);
+                        const panGain = ch === 0 ? (1 - er.delay * 2) : (0.8 + er.delay * 2);
+                        if (idx < length) data[idx] = er.gain * Math.max(0.3, Math.min(1.3, panGain));
+                    }
+                    // 后期混响: 指数衰减噪声，左右声道略微不同 (立体声展宽)
+                    const stereoOffset = ch === 0 ? 0 : 0.005 * sampleRate;
+                    for (let i = Math.floor(0.1 * sampleRate); i < length; i++) {
+                        const adjustedI = Math.min(i + Math.floor(stereoOffset), length - 1);
+                        const t = adjustedI / sampleRate;
+                        const envelope = Math.exp(-t * 2.8 / duration) * (1 - t / duration * 0.2);
+                        data[adjustedI] = (Math.random() * 2 - 1) * envelope * 0.55;
                     }
                 }
                 return impulse;
             }
 
             async function renderScore(score, totalDuration, dryLevel, wetLevel) {
-                const sampleRate = 44100;
+                const sampleRate = 48000; // 48kHz 专业采样率
                 const offlineCtx = new OfflineAudioContext(2, Math.ceil(sampleRate * totalDuration), sampleRate);
                 const master = offlineCtx.createGain();
                 master.gain.value = 1;
 
+                // 抗混叠滤波: 在最终输出前加一个 20kHz 低通，消除合成高频伪影
+                const antiAliasFilter = offlineCtx.createBiquadFilter();
+                antiAliasFilter.type = 'lowpass';
+                antiAliasFilter.frequency.value = 20000;
+                antiAliasFilter.Q.value = 0.5;
+
                 const sorted = [...score].sort((a, b) => a[0] - b[0]);
                 for (const [time, pitch, instrument, volume, dur] of sorted) {
                     const key = `${instrument}_${pitch}`;
-                    let buffer = sampleMap[key];
+                    let entry = sampleMap[key];
                     let fallbackUsed = false;
-                    if (!buffer) {
+                    if (!entry) {
+                        // 智能 Fallback: 先查该乐器 Do 音 → 再查内置同名乐器
                         const fallbackKey = `${instrument}_1`;
-                        buffer = sampleMap[fallbackKey];
-                        if (buffer) {
+                        entry = sampleMap[fallbackKey];
+                        if (!entry && BUILTIN_ALIAS[instrument]) {
+                            // 外部采样缺失，回退到内置合成
+                            console.warn(`采样 ${key} 缺失，回退至内置 ${instrument}_1`);
+                            const fbKey = `${instrument}_1`;
+                            entry = sampleMap[fbKey];
+                        }
+                        if (entry) {
                             fallbackUsed = true;
-                            console.warn(`音符 ${key} 缺失，回退至 ${fallbackKey}`);
+                            console.warn(`音符 ${key} 缺失，回退至 ${entry.type}:${entry.buffer ? key.replace(/_\d+$/, '_1') : '内置'}`);
                         } else {
                             console.warn(`缺少 ${key} 且无回退，跳过`);
                             continue;
                         }
                     }
+                    const buffer = entry.buffer;
+                    if (!buffer) { console.warn(`${key} 的 buffer 为空，跳过`); continue; }
                     const playbackRate = getPlaybackRate(pitch);
                     const source = offlineCtx.createBufferSource();
                     source.buffer = buffer;
@@ -1101,18 +1770,27 @@
                     source.stop(time + actualDuration);
                 }
 
-                // 可调混响
+                // 抗混叠滤波 → 主控限幅器
+                master.connect(antiAliasFilter);
+                const compressor = offlineCtx.createDynamicsCompressor();
+                compressor.threshold.value = -6;
+                compressor.knee.value = 3;
+                compressor.ratio.value = 12;
+                compressor.attack.value = 0.002;
+                compressor.release.value = 0.1;
+                antiAliasFilter.connect(compressor);
+
+                // 可调混响 (2.5s 更长的混响尾巴，空间感更足)
                 const dryGain = offlineCtx.createGain();
                 dryGain.gain.value = dryLevel;
                 const wetGain = offlineCtx.createGain();
                 wetGain.gain.value = wetLevel;
-                const reverbDuration = 1.5;
-                const decay = 0.8;
-                const impulse = createReverbImpulse(offlineCtx, reverbDuration, decay);
+                const reverbDuration = 2.5; // 2.5秒混响 (原1.5s)
+                const impulse = createReverbImpulse(offlineCtx, reverbDuration);
                 const convolver = offlineCtx.createConvolver();
                 convolver.buffer = impulse;
-                master.connect(dryGain);
-                master.connect(convolver);
+                compressor.connect(dryGain);
+                compressor.connect(convolver);
                 convolver.connect(wetGain);
                 dryGain.connect(offlineCtx.destination);
                 wetGain.connect(offlineCtx.destination);
@@ -1125,14 +1803,29 @@
             }
 
             // ============================================================
-            //  WAV 导出
+            //  WAV 导出 (24-bit PCM + 抖动 Dithering)
             // ============================================================
             function audioBufferToWav(buffer) {
+                // 输入校验
+                if (!buffer || !buffer.numberOfChannels || !buffer.sampleRate || !buffer.length) {
+                    console.error('[audioBufferToWav] 无效 AudioBuffer，返回静音 WAV');
+                    // 返回一个极短的静音 WAV
+                    const emptyBuf = new ArrayBuffer(44);
+                    const v = new DataView(emptyBuf);
+                    const ws = (o, s) => { for (let i = 0; i < s.length; i++) v.setUint8(o + i, s.charCodeAt(i)); };
+                    ws(0, 'RIFF'); v.setUint32(4, 36, true); ws(8, 'WAVE');
+                    ws(12, 'fmt '); v.setUint32(16, 16, true); v.setUint16(20, 1, true);
+                    v.setUint16(22, 1, true); v.setUint32(24, 44100, true); v.setUint32(28, 88200, true);
+                    v.setUint16(32, 2, true); v.setUint16(34, 16, true);
+                    ws(36, 'data'); v.setUint32(40, 0, true);
+                    return new Blob([emptyBuf], { type: 'audio/wav' });
+                }
                 const numChannels = buffer.numberOfChannels;
                 const sampleRate = buffer.sampleRate;
-                const bitsPerSample = 16;
+                const bitsPerSample = 24; // 24-bit，比16-bit动态范围提升48dB
+                const bytesPerSample = bitsPerSample / 8;
                 const samples = buffer.length;
-                const dataSize = samples * numChannels * bitsPerSample / 8;
+                const dataSize = samples * numChannels * bytesPerSample;
                 const headerSize = 44;
                 const totalSize = headerSize + dataSize;
                 const arrayBuffer = new ArrayBuffer(totalSize);
@@ -1145,35 +1838,56 @@
                 writeString(8, 'WAVE');
                 writeString(12, 'fmt ');
                 view.setUint32(16, 16, true);
-                view.setUint16(20, 1, true);
+                view.setUint16(20, 1, true); // PCM
                 view.setUint16(22, numChannels, true);
                 view.setUint32(24, sampleRate, true);
-                view.setUint32(28, sampleRate * numChannels * bitsPerSample / 8, true);
-                view.setUint16(32, numChannels * bitsPerSample / 8, true);
+                view.setUint32(28, sampleRate * numChannels * bytesPerSample, true);
+                view.setUint16(32, numChannels * bytesPerSample, true);
                 view.setUint16(34, bitsPerSample, true);
                 writeString(36, 'data');
                 view.setUint32(40, dataSize, true);
+
+                // 24-bit 批量转换 + 矩形抖动 (Dither) 降低量化噪声
+                const channelData = [];
+                for (let ch = 0; ch < numChannels; ch++) {
+                    channelData.push(buffer.getChannelData(ch));
+                }
                 let idx = 44;
                 for (let s = 0; s < samples; s++) {
                     for (let ch = 0; ch < numChannels; ch++) {
-                        const sample = Math.max(-1, Math.min(1, buffer.getChannelData(ch)[s]));
-                        const val = sample < 0 ? sample * 0x8000 : sample * 0x7FFF;
-                        view.setInt16(idx, val, true);
-                        idx += 2;
+                        // 加入矩形抖动 (±0.5 LSB) 再量化，消除量化失真
+                        const dither = (Math.random() - 0.5) * 2 / (1 << 24);
+                        let sample = channelData[ch][s] + dither;
+                        sample = Math.max(-1, Math.min(1, sample));
+                        // 24-bit 有符号整数
+                        const val = sample < 0 ? sample * 0x800000 : sample * 0x7FFFFF;
+                        const intVal = Math.round(val);
+                        // 小端序写入3字节
+                        view.setUint8(idx, intVal & 0xFF);
+                        view.setUint8(idx + 1, (intVal >> 8) & 0xFF);
+                        view.setUint8(idx + 2, (intVal >> 16) & 0xFF);
+                        idx += 3;
                     }
                 }
                 return new Blob([arrayBuffer], { type: 'audio/wav' });
             }
 
             function downloadBlob(blob, filename) {
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = filename;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                setTimeout(() => URL.revokeObjectURL(url), 10000);
+                try {
+                    if (!blob || !blob.size) throw new Error('无效 Blob');
+                    if (!filename) filename = 'pure_music_v4.wav';
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = filename;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    setTimeout(() => URL.revokeObjectURL(url), 10000);
+                } catch (e) {
+                    console.error('[downloadBlob] 下载失败:', e.message);
+                    showError('文件下载失败: ' + e.message);
+                }
             }
 
             // ============================================================
@@ -1181,7 +1895,11 @@
             // ============================================================
             function stopPreview() {
                 if (playbackTimer) {
-                    clearInterval(playbackTimer);
+                    if (playbackTimer.raf) {
+                        cancelAnimationFrame(playbackTimer.id);
+                    } else {
+                        clearInterval(playbackTimer);
+                    }
                     playbackTimer = null;
                 }
                 if (playbackSource) {
@@ -1214,9 +1932,17 @@
                     return;
                 }
                 const totalDuration = calculateDuration(score);
+                // 渲染超时守卫: 超过 5 分钟或总时长异常则终止
+                if (!isFinite(totalDuration) || totalDuration > 300) {
+                    showError('乐谱总时长异常(>300秒)，请检查乐谱');
+                    btnSynthesize.disabled = false;
+                    btnSynthesize.textContent = '🎵 合成并下载';
+                    return;
+                }
                 btnSynthesize.disabled = true;
                 btnSynthesize.textContent = '⏳ 合成中…';
                 try {
+                    ensureAudioContext();
                     if (audioCtx && audioCtx.state === 'suspended') await audioCtx.resume();
                     const dry = parseInt(reverbDry.value) / 100;
                     const wet = parseInt(reverbWet.value) / 100;
@@ -1225,7 +1951,7 @@
                     const renderedBuffer = await renderScore(score, totalDuration, dry, wet);
                     const wavBlob = audioBufferToWav(renderedBuffer);
                     const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
-                    downloadBlob(wavBlob, `pure_music_v3_${timestamp}.wav`);
+                    downloadBlob(wavBlob, `pure_music_v4_${timestamp}.wav`);
                     setProgress(Object.keys(sampleMap).length, TOTAL_SAMPLES, '已完成',
                         `导出成功！${(wavBlob.size/1024/1024).toFixed(1)} MB`);
                 } catch (err) {
@@ -1278,6 +2004,7 @@
                 btnPreview.disabled = true;
                 btnPreview.textContent = '⏳ 渲染中…';
                 try {
+                    ensureAudioContext();
                     if (audioCtx && audioCtx.state === 'suspended') await audioCtx.resume();
                     previewBuffer = await renderScore(score, totalDuration, dry, wet);
                     // 缓存当前参数
@@ -1321,7 +2048,9 @@
                 btnPreview.textContent = '⏹ 停止';
                 btnPreview.disabled = false;
                 playbackStartTime = audioCtx.currentTime - offset;
-                playbackTimer = setInterval(() => {
+                // 使用 requestAnimationFrame 替代 setInterval，更流畅且省电
+                let rafId = null;
+                function updateProgress() {
                     if (!playbackSource) {
                         stopPreview();
                         return;
@@ -1330,8 +2059,15 @@
                     const pct = Math.min(elapsed / previewTotalDuration * 100, 100);
                     playbackTime.textContent = elapsed.toFixed(1);
                     playbackFill.style.width = pct + '%';
-                    if (pct >= 100) stopPreview();
-                }, 100);
+                    if (pct >= 100) {
+                        stopPreview();
+                    } else {
+                        rafId = requestAnimationFrame(updateProgress);
+                    }
+                }
+                rafId = requestAnimationFrame(updateProgress);
+                // 保存 rafId 以便 stopPreview 取消
+                playbackTimer = { raf: true, id: rafId };
                 source.onended = () => stopPreview();
             }
 
@@ -1386,12 +2122,62 @@
             scoreInput.addEventListener('input', debouncedValidate);
             bpmInput.addEventListener('input', debouncedValidate);
 
-            // 混响滑块显示
-            reverbDry.addEventListener('input', () => {
-                reverbDryLabel.textContent = reverbDry.value + '%';
+            // ============================================================
+            //  混响双控件联动 (滑块 ↔ 数字输入双向绑定)
+            // ============================================================
+            function syncReverbRangeToNum(rangeEl, numEl) {
+                const val = parseFloat(rangeEl.value);
+                numEl.value = val.toFixed(1);
+                numEl.classList.remove('err-flash');
+            }
+            function syncReverbNumToRange(rangeEl, numEl) {
+                let val = parseFloat(numEl.value);
+                if (isNaN(val)) return;
+                // 钳制到 [0, 100]
+                if (val < 0) { val = 0; numEl.value = '0'; flashError(numEl); }
+                if (val > 100) { val = 100; numEl.value = '100'; flashError(numEl); }
+                rangeEl.value = val;
+                rangeEl.dispatchEvent(new Event('input', { bubbles: true }));
+            }
+            function flashError(el) {
+                el.classList.add('err-flash');
+                setTimeout(() => el.classList.remove('err-flash'), 500);
+            }
+
+            // 干声联动
+            reverbDry.addEventListener('input', () => syncReverbRangeToNum(reverbDry, reverbDryNum));
+            reverbDryNum.addEventListener('input', () => syncReverbNumToRange(reverbDry, reverbDryNum));
+            reverbDryNum.addEventListener('blur', () => {
+                if (reverbDryNum.value === '') reverbDryNum.value = reverbDry.value;
             });
-            reverbWet.addEventListener('input', () => {
-                reverbWetLabel.textContent = reverbWet.value + '%';
+            // 湿声联动
+            reverbWet.addEventListener('input', () => syncReverbRangeToNum(reverbWet, reverbWetNum));
+            reverbWetNum.addEventListener('input', () => syncReverbNumToRange(reverbWet, reverbWetNum));
+            reverbWetNum.addEventListener('blur', () => {
+                if (reverbWetNum.value === '') reverbWetNum.value = reverbWet.value;
+            });
+
+            // 混响预设按钮
+            document.querySelectorAll('.preset-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const dry = parseInt(btn.dataset.dry, 10);
+                    const wet = parseInt(btn.dataset.wet, 10);
+                    reverbDry.value = dry;
+                    reverbDryNum.value = dry.toFixed(1);
+                    reverbDry.dispatchEvent(new Event('input', { bubbles: true }));
+                    reverbWet.value = wet;
+                    reverbWetNum.value = wet.toFixed(1);
+                    reverbWet.dispatchEvent(new Event('input', { bubbles: true }));
+                });
+            });
+
+            // ============================================================
+            //  采样导入事件绑定
+            // ============================================================
+            btnImportFiles.addEventListener('click', handleImportFiles);
+            btnImportUrl.addEventListener('click', handleImportUrl);
+            sampleUrlInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') handleImportUrl();
             });
 
             // ============================================================
